@@ -1,2 +1,5 @@
 buyer/node_modules
 seller/node_modules
+
+buyer/.env
+seller/.env
