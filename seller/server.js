@@ -19,6 +19,7 @@ const PRICE = "0.01";
 const PROVIDER_URL = "https://evm-t3.cronos.org";
 const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
 
+const DEV_USDC_ADDRESS = "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0";
 
 // OpenAI Setup (Optional)
 let openai = null;
@@ -43,28 +44,64 @@ const x402Protocol = async (req,res,next)=>{
             error: "Payment Required",
             schemes: [{
                 network: "cronos-testnet",
-                currency: "TCRO",
-                amount: PRICE,
-                to: SELLER_WALLET
+                currency: "USDC",
+                amount: "100000",
+                to: SELLER_WALLET,
+                token: DEV_USDC_ADDRESS
             }],
             // Fallback for simple clients
             pay_to: SELLER_WALLET,
-            amount: PRICE
+            currency: "USDC",
+            amount: "100000",
+            token: DEV_USDC_ADDRESS
         });
+
+        // VERIFY USING NEW FUNCTION
+    logEvent("VERIFY", "System", `Checking Tx: ${txHash.slice(0, 10)}...`);
+    
+    // 👇 THIS IS THE FIX
+    const isValid = await verifyTokenPayment(txHash);
+
+    if (isValid) {
+        logEvent("PAID", "Agent", `✅ USDC Payment Confirmed!`);
+        next();
+    } else {
+        logEvent("ERROR", "Fraud", "Payment Verification Failed");
+        res.status(403).json({ error: "Payment Invalid or Not Found" });
+    }
     }
 
     // Verify Payment
+    async function verifyTokenPayment(txHash) {
     try {
-        const tx = await provider.getTransaction(txHash);
-        if (tx && tx.to.toLowerCase() === SELLER_WALLET.toLowerCase()) {
-            logEvent("PAID", tx.from, `Verified ${ethers.formatEther(tx.value)} CRO`);
-            next();
-        } else {
-            throw new Error("Invalid Recipient");
+        // 1. Get the Receipt (contains logs)
+        const receipt = await provider.getTransactionReceipt(txHash);
+        if (!receipt) return false;
+
+        // 2. Look for "Transfer" Event (Standard ERC-20 Log)
+        // Topic 0: The "Transfer" signature
+        // Topic 2: The "To" address (You)
+        const transferTopic = ethers.id("Transfer(address,address,uint256)");
+        const sellerTopic = ethers.zeroPadValue(SELLER_WALLET, 32);
+
+        const paymentLog = receipt.logs.find(log => {
+            return log.address.toLowerCase() === DEV_USDC_ADDRESS.toLowerCase() && // Came from USDC Contract
+                   log.topics[0] === transferTopic && // Was a Transfer
+                   log.topics[2].toLowerCase() === sellerTopic.toLowerCase(); // Was sent to YOU
+        });
+
+        if (paymentLog) {
+            // Optional: Check if amount is enough
+            const amountPaid = BigInt(paymentLog.data);
+            if (amountPaid >= BigInt(PRICE_UNITS)) return true;
         }
-    } catch (err) {
-        res.status(403).json({ error: "Payment Invalid" });
+        return false;
+
+    } catch (e) {
+        console.error("Verification Error:", e);
+        return false;
     }
+}
 };
 
 
