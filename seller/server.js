@@ -2,13 +2,12 @@ require('dotenv').config();
 const express=require('express');
 const cors = require('cors');
 const ethers = require('ethers');
-const openai = require('openai');
+const OpenAI = require('openai');
 
 //checking
 if(!process.env.SELLER_WALLET){
     console.log("server wallet is missing");
 }
-
 
 const app=express();
 app.use(cors());
@@ -20,6 +19,10 @@ const PRICE = "0.01";
 const PROVIDER_URL = "https://evm-t3.cronos.org";
 const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
 
+
+// OpenAI Setup (Optional)
+let openai = null;
+if (process.env.OPENAI_API_KEY) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 //logging
 const logs = [];
@@ -49,10 +52,24 @@ const x402Protocol = async (req,res,next)=>{
             amount: PRICE
         });
     }
-}
+
+    // Verify Payment
+    try {
+        const tx = await provider.getTransaction(txHash);
+        if (tx && tx.to.toLowerCase() === SELLER_WALLET.toLowerCase()) {
+            logEvent("PAID", tx.from, `Verified ${ethers.formatEther(tx.value)} CRO`);
+            next();
+        } else {
+            throw new Error("Invalid Recipient");
+        }
+    } catch (err) {
+        res.status(403).json({ error: "Payment Invalid" });
+    }
+};
+
 
 //Api
-app.get("/api/analyze/:token",middleware,async (req,res)=>{
+app.get("/api/analyze/:token",x402Protocol,async (req,res)=>{
         const token = req.params.token || "CRO" ;
         let analysis = `Simulation: ${token} is looking bullish based on volume.`;
 
