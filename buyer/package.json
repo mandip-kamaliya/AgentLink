@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "@crypto.com/facilitator-client": "^1.0.2",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "ethers": "^6.16.0"
   }
 }
