@@ -1,28 +1,20 @@
 // agent-link-pro/buyer/agent.js
+// ⚡ FINAL AGENT: Official SDK + Dynamic Input
 require('dotenv').config();
 const axios = require('axios');
 const { ethers } = require('ethers');
-// 👇 THE OFFICIAL SDK IMPORT
 const { Facilitator, CronosNetwork } = require('@crypto.com/facilitator-client');
 
 // CONFIG
-const TARGET_TOKEN = "PEPE";
-const ORACLE_URL = `http://localhost:3000/api/analyze/${TARGET_TOKEN}`;
 const PROVIDER_URL = "https://evm-t3.cronos.org";
 
-// --- SAFETY CHECK ---
-if (!process.env.BUYER_PRIVATE_KEY) {
-    console.error("❌ CRITICAL ERROR: Missing BUYER_PRIVATE_KEY in .env");
-    process.exit(1);
-}
+// 1. DYNAMIC TARGET (CLI Input)
+const args = process.argv.slice(2);
+const TARGET_TOKEN = args[0] ? args[0].toUpperCase() : "PEPE"; // Default to PEPE
+const ORACLE_URL = `http://127.0.0.1:3000/api/analyze/${TARGET_TOKEN}`;
 
-// 1. SETUP THE SDK
-// The docs say the base URL is fixed internally, so we just pick the network.
-const facilitator = new Facilitator({
-    network: CronosNetwork.CronosTestnet
-});
-
-// Setup Ethers Signer (Required by SDK)
+// SETUP
+const facilitator = new Facilitator({ network: CronosNetwork.CronosTestnet });
 const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
 const signer = new ethers.Wallet(process.env.BUYER_PRIVATE_KEY, provider);
 
@@ -30,9 +22,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function runOfficialAgent() {
     console.clear();
-    console.log(`\n🤖 OFFICIAL AGENT LINKED [${signer.address}]`);
-    console.log(`   SDK: @crypto.com/facilitator-client`);
-    console.log(`   Net: Cronos Testnet`);
+    console.log(`\n🤖 AGENT LINKED [${signer.address.slice(0,6)}...]`);
+    console.log(`   🎯 TARGET: ${TARGET_TOKEN}`);
+    console.log(`   📡 SOURCE: Crypto.com Exchange API`);
     await sleep(800);
 
     try {
@@ -42,69 +34,70 @@ async function runOfficialAgent() {
 
     } catch (error) {
         if (error.response && error.response.status === 402) {
-            console.log(`   🛑 402 Payment Required`);
             
-            // 2. PARSE INVOICE FROM SERVER
-            // Our manual server sends: { pay_to, amount, currency }
+            // 2. PARSE INVOICE
             const invoice = error.response.data;
-            const tokenAddress = invoice.token || "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0";
-            console.log(`   🧾 Invoice: ${invoice.amount} ${invoice.currency} -> ${invoice.pay_to}`);
+            console.log(`   🛑 402 Payment Required`);
+            console.log(`   🧾 Invoice: ${invoice.amount} units (USDC) -> Seller`);
             await sleep(500);
 
             try {
                 console.log(`\n⚡ INITIALIZING SDK SETTLEMENT...`);
                 
-                // A. Generate the Payment Header (Sign the intent)
-                // Note: The SDK treats 'value' as base units. 
-                // If using Tokens/USDC, 1000000 = 1 USDC.
-                // For this Hackathon demo, we pass the amount requested.
+                // A. Generate Header
                 const header = await facilitator.generatePaymentHeader({
                     to: invoice.pay_to,
-                    value: invoice.amount.toString(), // Convert to Wei if needed
-                    token:tokenAddress,
+                    value: invoice.amount.toString(),
                     signer: signer,
-                    validBefore: Math.floor(Date.now() / 1000) + 3600 // 1 hour expiry
+                    token: invoice.token, 
+                    validBefore: Math.floor(Date.now() / 1000) + 3600
                 });
-                console.log(`   > EIP-3009 Header Signed`);
 
-                // B. Generate Requirements object (Required by SDK)
+                // B. Generate Requirements
                 const requirements = facilitator.generatePaymentRequirements({
                     payTo: invoice.pay_to,
-                    description: `AgentLink Service: ${TARGET_TOKEN}`,
+                    description: `Data: ${TARGET_TOKEN}`,
                     maxAmountRequired: invoice.amount.toString(),
-                    token:tokenAddress
+                    token: invoice.token
                 });
 
-                // C. Build the Request Body
+                // C. Settle
                 const body = facilitator.buildVerifyRequest(header, requirements);
-
-                // D. Settle (Execute On-Chain)
                 console.log(`   > Submitting to Facilitator API...`);
+                
                 const settleResponse = await facilitator.settlePayment(body);
+                
+                // Find the Hash (Safety check)
+                const realTxHash = settleResponse.txHash || settleResponse.hash || settleResponse.transactionHash;
 
-                console.log("\n🕵️ SDK DEBUG: What did the Facilitator return?");
-                console.log(JSON.stringify(settleResponse, null, 2)); 
-                console.log("-----------------------------------------------\n");
+                if (!realTxHash) throw new Error("No Tx Hash returned from SDK");
+
+                console.log(`   ✅ SETTLED! Tx: ${realTxHash}`);
                 
-                console.log(`   ✅ SETTLED! Tx: ${settleResponse.txHash}`);
-                
-                // 3. SEND PROOF TO SELLER
+                // 3. SEND PROOF
                 console.log(`\n2️⃣  Redeeming Service with Proof...`);
+                
                 const retryResponse = await axios.get(ORACLE_URL, {
-                    headers: { 'x-payment-hash': settleResponse.txHash }
+                    headers: { 'x-payment-hash': realTxHash },
+                    timeout: 60000 // Wait up to 60s for server verification
                 });
 
                 console.log(`\n🎉 INTELLIGENCE ACQUIRED:`);
                 console.log("------------------------------------------------");
-                console.log(retryResponse.data);
+                console.log(`📈 SOURCE: ${retryResponse.data.source}`);
+                console.log(`🤖 AI SAYS: "${retryResponse.data.data}"`);
+                
+                if(retryResponse.data.market_stats) {
+                    console.log(`📊 REAL STATS: Price $${retryResponse.data.market_stats.price} | Vol ${retryResponse.data.market_stats.volume}`);
+                }
                 console.log("------------------------------------------------");
 
             } catch (sdkErr) {
-                console.error("❌ SDK Error:", sdkErr.message);
-                if (sdkErr.response) console.error("   API Detail:", sdkErr.response.data);
+                console.error("❌ Error:", sdkErr.message);
+                if (sdkErr.response) console.error("   Detail:", sdkErr.response.data);
             }
         } else {
-            console.error("❌ Network Error:", error.message);
+            console.error("❌ Error:", error.message);
         }
     }
 }
