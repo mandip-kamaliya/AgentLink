@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGENT-LINK // NETRUNNER VIEW</title>
+    <style>
+        /* --- CYBERPUNK THEME ENGINE --- */
+        :root {
+            --neon-green: #00ff41;
+            --neon-red: #ff0055;
+            --neon-yellow: #fcee0a;
+            --neon-blue: #00eaff;
+            --bg-color: #050505;
+            --panel-bg: #0a0a0a;
+            --scan-line: rgba(0, 255, 65, 0.03);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--neon-green);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            text-transform: uppercase;
+        }
+
+        /* CRT SCANLINE EFFECT */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+            padding: 20px;
+            min-height: 80vh;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--neon-green);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        .system-status {
+            font-size: 12px;
+            background: var(--neon-green);
+            color: black;
+            padding: 2px 8px;
+            font-weight: bold;
+            animation: blink 2s infinite;
+        }
+
+        /* LOG FEED */
+        #logs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-entry {
+            background: var(--panel-bg);
+            border-left: 3px solid #333;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .log-entry:hover {
+            background: #111;
+            border-left-width: 6px;
+            padding-left: 15px;
+        }
+
+        /* STATUS COLORS */
+        .type-PAID { border-left-color: var(--neon-green); color: var(--neon-green); }
+        .type-PAID .msg { text-shadow: 0 0 5px var(--neon-green); font-weight: bold; }
+        
+        .type-BLOCK { border-left-color: var(--neon-yellow); color: var(--neon-yellow); }
+        
+        .type-ERROR { border-left-color: var(--neon-red); color: var(--neon-red); }
+        
+        .type-AI, .type-THINKING { border-left-color: var(--neon-blue); color: var(--neon-blue); }
+
+        .meta {
+            text-align: right;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .agent-hash {
+            color: #888;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* ANIMATIONS */
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>⚡ AGENT-LINK NODE</h1>
+                <small>PROTOCOL: x402 // NET: CRONOS-TESTNET</small>
+            </div>
+            <div class="system-status">SYSTEM ONLINE</div>
+        </header>
+
+        <div id="logs">
+            <div style="text-align:center; padding: 20px; color: #555;">
+                WAITING FOR INCOMING CONNECTIONS...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- POLLING LOGIC ---
+        const API_URL = 'http://localhost:3000/logs';
+        const logsContainer = document.getElementById('logs');
+        let lastLogTime = null;
+
+        async function updateDashboard() {
+            try {
+                const response = await fetch(API_URL);
+                const logs = await response.json();
+
+                // If logs are empty, do nothing (or show waiting)
+                if (logs.length === 0) return;
+
+                // Render Logs
+                const html = logs.map(log => {
+                    const typeClass = `type-${log.type}`; // e.g., type-PAID
+                    
+                    return `
+                        <div class="log-entry ${typeClass}">
+                            <div class="content">
+                                <div><span style="font-weight:bold">[${log.type}]</span> <span class="msg">${log.message}</span></div>
+                            </div>
+                            <div class="meta">
+                                <div class="agent-hash">AGENT: ${log.agent.substring(0, 10)}...</div>
+                                <div>${log.time}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                logsContainer.innerHTML = html;
+
+                // Update Status Indicator based on connectivity
+                document.querySelector('.system-status').innerText = "SYSTEM ONLINE";
+                document.querySelector('.system-status').style.backgroundColor = "var(--neon-green)";
+
+            } catch (error) {
+                console.error("Connection Lost", error);
+                document.querySelector('.system-status').innerText = "CONNECTION LOST";
+                document.querySelector('.system-status').style.backgroundColor = "var(--neon-red)";
+            }
+        }
+
+        // Auto-Refresh every 1 second
+        setInterval(updateDashboard, 1000);
+        updateDashboard();
+    </script>
+</body>
+</html>
