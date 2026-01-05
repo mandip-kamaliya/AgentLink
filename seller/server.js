@@ -23,11 +23,28 @@ if (process.env.GROQ_API_KEY) {
   console.log("✅ Multi-AI Consensus Engine initialized");
 }
 
-// AI Council - Multiple models for consensus
+// 🚀 INNOVATION: DIVERSE AI COUNCIL (Optimized for Groq Free Tier)
+// AI Council - 3 Verified Working Models (The "Llama Trinity")
+// AI Council - Optimized for Rate Limits (Big, Small, Medium)
 const AI_COUNCIL = [
-  { name: "Llama 3.3 70B", model: "llama-3.3-70b-versatile", specialty: "Deep Analysis" },
-  { name: "Llama 3.1 8B", model: "llama-3.1-8b-instant", specialty: "Rapid Assessment" },
-  { name: "Gemma 2 9B", model: "gemma2-9b-it", specialty: "Pattern Recognition" }
+  // 1. The Strategist (Heavy 70B)
+  { 
+    name: "Llama 3.3 70B", 
+    model: "llama-3.3-70b-versatile", 
+    specialty: "Market Strategy" 
+  },
+  // 2. The Analyst (Fast 8B)
+  { 
+    name: "Llama 3.1 8B", 
+    model: "llama-3.1-8b-instant", 
+    specialty: "Technical Analysis" 
+  },
+  // 3. The Visionary (New 11B - Different Rate Limit Bucket)
+ { 
+    name: "Gemma 2 9B", 
+    model: "gemma2-9b-it", 
+    specialty: "Sentiment Analysis" 
+  }
 ];
 
 const logs = [];
