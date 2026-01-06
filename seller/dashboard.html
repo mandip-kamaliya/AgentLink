@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentLink // Multi-AI Consensus Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -34,7 +35,6 @@
             position: relative;
         }
 
-        /* Animated Grid Background */
         body::before {
             content: '';
             position: fixed;
@@ -64,7 +64,6 @@
             z-index: 1;
         }
 
-        /* Header */
         header {
             background: rgba(17, 24, 39, 0.8);
             backdrop-filter: blur(10px);
@@ -89,8 +88,46 @@
             background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
             letter-spacing: 2px;
+        }
+
+        .wallet-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .wallet-btn {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .wallet-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .wallet-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .wallet-info {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--neon-green);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--neon-green);
         }
 
         .status-badge {
@@ -149,7 +186,119 @@
             color: var(--neon-cyan);
         }
 
-        /* Main Grid */
+        /* Request Panel */
+        .request-panel {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .request-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: stretch;
+        }
+
+        .token-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .token-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(57, 255, 20, 0.5);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #333;
+        }
+
+        .price-info {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .price-amount {
+            color: var(--neon-yellow);
+            font-weight: bold;
+        }
+
+        .quick-tokens {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .quick-token-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            color: var(--text-gray);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .quick-token-btn:hover {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+            background: rgba(185, 103, 255, 0.1);
+        }
+
+        /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -190,7 +339,6 @@
             letter-spacing: 1px;
         }
 
-        /* Consensus Visualization */
         .consensus-display {
             text-align: center;
             padding: 30px;
@@ -244,7 +392,6 @@
             color: var(--neon-cyan);
         }
 
-        /* AI Models */
         .ai-models {
             display: flex;
             flex-direction: column;
@@ -257,7 +404,6 @@
             border-radius: 8px;
             padding: 15px;
             transition: all 0.3s;
-            cursor: pointer;
         }
 
         .ai-model:hover {
@@ -329,7 +475,6 @@
             font-style: italic;
         }
 
-        /* Analysis Summary */
         .analysis-summary {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
@@ -342,7 +487,6 @@
             color: var(--text-gray);
         }
 
-        /* Logs */
         .log-feed {
             max-height: 500px;
             overflow-y: auto;
@@ -407,7 +551,6 @@
             color: var(--text-gray);
         }
 
-        /* Market Data */
         .market-data {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -453,7 +596,6 @@
             color: var(--neon-pink);
         }
 
-        /* Loading Animation */
         .loading {
             text-align: center;
             padding: 40px;
@@ -471,7 +613,6 @@
             60%, 100% { content: '...'; }
         }
 
-        /* Footer */
         footer {
             text-align: center;
             padding: 20px;
@@ -488,6 +629,30 @@
         .footer-link:hover {
             text-decoration: underline;
         }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(17, 24, 39, 0.95);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 15px 20px;
+            color: var(--neon-cyan);
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success { border-color: var(--neon-green); color: var(--neon-green); }
+        .notification.error { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .notification.warning { border-color: var(--neon-yellow); color: var(--neon-yellow); }
     </style>
 </head>
 <body>
@@ -501,9 +666,14 @@
                         Multi-Round AI Consensus Engine • HTTP 402 Protocol • Cronos Testnet
                     </p>
                 </div>
-                <div class="status-badge">
-                    <div class="pulse"></div>
-                    <span id="system-status">SYSTEM ONLINE</span>
+                <div class="wallet-section">
+                    <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">
+                        Connect Wallet
+                    </button>
+                    <div class="wallet-info" id="walletInfo" style="display: none;">
+                        <div id="walletAddress">0x0000...0000</div>
+                        <div id="walletBalance" style="margin-top: 5px;">0.00 USDC</div>
+                    </div>
                 </div>
             </div>
             <div class="header-stats">
@@ -526,11 +696,39 @@
             </div>
         </header>
 
-        <!-- Main Dashboard Grid -->
+        <!-- Request Panel -->
+        <div class="request-panel">
+            <h2 class="request-title">🎯 Request AI Consensus Analysis</h2>
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="token-input" 
+                    id="tokenInput" 
+                    placeholder="Enter Token (e.g., BTC, ETH, CRO)"
+                    maxlength="10"
+                />
+                <button class="analyze-btn" id="analyzeBtn" onclick="requestAnalysis()" disabled>
+                    Analyze Token
+                </button>
+            </div>
+            <div class="quick-tokens">
+                <button class="quick-token-btn" onclick="setToken('BTC')">BTC</button>
+                <button class="quick-token-btn" onclick="setToken('ETH')">ETH</button>
+                <button class="quick-token-btn" onclick="setToken('CRO')">CRO</button>
+                <button class="quick-token-btn" onclick="setToken('SOL')">SOL</button>
+                <button class="quick-token-btn" onclick="setToken('BNB')">BNB</button>
+                <button class="quick-token-btn" onclick="setToken('PEPE')">PEPE</button>
+            </div>
+            <div class="price-info">
+                Price per analysis: <span class="price-amount">0.01 USDC</span> • 
+                Includes 2 AI models in 2 rounds of deliberation
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
         <div class="dashboard-grid">
-            <!-- Left Column: Consensus & Market Data -->
+            <!-- Left Column -->
             <div>
-                <!-- Latest Consensus -->
                 <div class="panel" id="consensus-panel" style="display: none;">
                     <div class="panel-header">
                         <h2 class="panel-title">🎯 Latest Consensus</h2>
@@ -538,9 +736,7 @@
                     </div>
                     
                     <div class="consensus-display">
-                        <div class="consensus-signal" id="consensus-signal">
-                            WAITING
-                        </div>
+                        <div class="consensus-signal" id="consensus-signal">WAITING</div>
                         <div style="font-size: 14px; color: var(--text-gray); margin-bottom: 15px;" id="consensus-summary">
                             Awaiting first analysis...
                         </div>
@@ -560,13 +756,11 @@
                         </div>
                     </div>
 
-                    <!-- Analysis Summary -->
                     <div class="analysis-summary" id="analysis-detail">
                         <strong style="color: var(--neon-cyan);">📝 Analysis Summary:</strong><br>
                         <span id="analysis-text">Waiting for consensus data...</span>
                     </div>
 
-                    <!-- Market Data -->
                     <div class="market-data" style="margin-top: 20px;">
                         <div class="market-stat">
                             <div class="market-stat-label">Current Price</div>
@@ -585,7 +779,6 @@
                     </div>
                 </div>
 
-                <!-- Waiting State -->
                 <div class="panel" id="waiting-panel">
                     <div class="loading">
                         <div style="font-size: 48px; margin-bottom: 20px;">🤖</div>
@@ -599,9 +792,8 @@
                 </div>
             </div>
 
-            <!-- Right Column: AI Models -->
+            <!-- Right Column -->
             <div>
-                <!-- AI Council -->
                 <div class="panel">
                     <div class="panel-header">
                         <h2 class="panel-title">🤖 AI Council</h2>
@@ -619,9 +811,7 @@
                             <div class="confidence-bar">
                                 <div class="confidence-fill" style="width: 0%"></div>
                             </div>
-                            <div class="ai-model-reason">
-                                Waiting for market data...
-                            </div>
+                            <div class="ai-model-reason">Waiting for market data...</div>
                         </div>
 
                         <div class="ai-model">
@@ -636,9 +826,7 @@
                             <div class="confidence-bar">
                                 <div class="confidence-fill" style="width: 0%"></div>
                             </div>
-                            <div class="ai-model-reason">
-                                Waiting for market data...
-                            </div>
+                            <div class="ai-model-reason">Waiting for market data...</div>
                         </div>
                     </div>
                 </div>
@@ -656,7 +844,6 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <footer>
             AgentLink v1.0 • Multi-Round AI Consensus Engine<br>
             Built for <a href="#" class="footer-link">Cronos x402 Paytech Hackathon</a> • 
@@ -664,295 +851,441 @@
         </footer>
     </div>
 
-  <script>
-    const API_URL = 'http://localhost:3000';
-    let totalAnalyses = 0;
-    let latestToken = 'BTC';
-    let hasShownConsensus = false;
-    let latestPrice = null;
+    <script>
+        // Constants
+        const API_URL = 'http://localhost:3000';
+        const CRONOS_TESTNET_CHAIN_ID = '0x152'; // 338 in hex
+        const DEV_USDC_ADDRESS = '0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0';
+        const SELLER_WALLET = '0x706f61089d8a9c1aaa3b80e8caa6f38853f7abf3';
+        const PRICE_UNITS = '10000'; // 0.01 USDC (6 decimals)
 
-    // Parse token from logs
-    function extractTokenFromLogs(logs) {
-        for (let i = 0; i < logs.length; i++) {
-            const log = logs[i];
+        // State
+        let provider = null;
+        let signer = null;
+        let userAddress = null;
+        let totalAnalyses = 0;
+        let latestToken = 'BTC';
+        let latestPrice = null;
+
+        // ABI for ERC-20 transfer
+        const ERC20_ABI = [
+            'function transfer(address to, uint256 amount) returns (bool)',
+            'function balanceOf(address owner) view returns (uint256)',
+            'function approve(address spender, uint256 amount) returns (bool)'
+        ];
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
-            if (log.message.includes('FETCHING MARKET DATA FOR')) {
-                const match = log.message.match(/FOR\s+(\w+)/i);
-                if (match) return match[1].toUpperCase();
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Connect Wallet
+        async function connectWallet() {
+            if (typeof window.ethereum === 'undefined') {
+                showNotification('Please install MetaMask!', 'error');
+                return;
             }
-            
-            if (log.type === 'DATA' && log.message.includes('Fetching')) {
-                const match = log.message.match(/Fetching\s+(\w+)/i);
-                if (match) return match[1].toUpperCase();
-            }
-            
-            if (log.type === 'AI' && log.message.includes('Generated for')) {
-                const match = log.message.match(/for\s+(\w+)/i);
-                if (match) return match[1].toUpperCase();
+
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                userAddress = accounts[0];
+
+                // Create provider and signer
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+
+                // Check network
+                const network = await provider.getNetwork();
+                if (network.chainId !== 338) {
+                    await switchToCronosTestnet();
+                }
+
+                // Get USDC balance
+                await updateWalletUI();
+
+                showNotification('Wallet connected successfully!', 'success');
+
+                // Enable analyze button
+                document.getElementById('analyzeBtn').disabled = false;
+
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+                showNotification('Failed to connect wallet: ' + error.message, 'error');
             }
         }
-        
-        return latestToken;
-    }
 
-    // Extract price from logs - multiple patterns
-    function extractPriceFromLogs(logs) {
-        // Try multiple log patterns
-        for (let i = 0; i < logs.length; i++) {
-            const log = logs[i];
-            
-            // Pattern 1: "BTC = $92350" or "ETH = $3245.67"
-            if (log.type === 'DATA' && log.message.includes('=')) {
-                const match = log.message.match(/=\s*\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-                if (match) {
-                    return parseFloat(match[1].replace(/,/g, ''));
-                }
-            }
-            
-            // Pattern 2: "Data acquired: $92350"
-            if (log.message.includes('Data acquired') || log.message.includes('✅')) {
-                const match = log.message.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-                if (match) {
-                    return parseFloat(match[1].replace(/,/g, ''));
-                }
-            }
-            
-            // Pattern 3: Any log with price format
-            if (log.type === 'DATA') {
-                const match = log.message.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
-                if (match) {
-                    return parseFloat(match[1].replace(/,/g, ''));
+        // Switch to Cronos Testnet
+        async function switchToCronosTestnet() {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: CRONOS_TESTNET_CHAIN_ID }],
+                });
+            } catch (switchError) {
+                // Chain doesn't exist, add it
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: CRONOS_TESTNET_CHAIN_ID,
+                            chainName: 'Cronos Testnet',
+                            nativeCurrency: { name: 'TCRO', symbol: 'TCRO', decimals: 18 },
+                            rpcUrls: ['https://evm-t3.cronos.org'],
+                            blockExplorerUrls: ['https://explorer.cronos.org/testnet']
+                        }]
+                    });
+                } else {
+                    throw switchError;
                 }
             }
         }
-        
-        // Return last known price or estimate based on token
-        if (latestPrice) return latestPrice;
-        
-        // Default estimates if no price found
-        const defaults = {
-            'BTC': 92500,
-            'ETH': 3350,
-            'CRO': 0.15,
-            'SOL': 145,
-            'BNB': 620,
-            'ADA': 0.85,
-            'PEPE': 0.000015
-        };
-        
-        return defaults[latestToken] || 1000;
-    }
 
-    // Fetch and display logs
-    async function updateLogs() {
-        try {
-            const response = await fetch(`${API_URL}/logs`);
-            const logs = await response.json();
+        // Update wallet UI
+        async function updateWalletUI() {
+            if (!userAddress) return;
 
-            if (logs.length === 0) return;
+            // Show wallet info
+            document.getElementById('connectBtn').style.display = 'none';
+            document.getElementById('walletInfo').style.display = 'block';
+            document.getElementById('walletAddress').textContent = 
+                userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
 
-            // Extract current token
-            const currentToken = extractTokenFromLogs(logs);
-            if (currentToken !== latestToken) {
-                latestToken = currentToken;
-                latestPrice = null; // Reset price when token changes
+            // Get USDC balance
+            try {
+                const usdcContract = new ethers.Contract(DEV_USDC_ADDRESS, ERC20_ABI, provider);
+                const balance = await usdcContract.balanceOf(userAddress);
+                const formattedBalance = ethers.utils.formatUnits(balance, 6);
+                document.getElementById('walletBalance').textContent = `${parseFloat(formattedBalance).toFixed(2)} USDC`;
+            } catch (error) {
+                console.error('Error getting balance:', error);
+                document.getElementById('walletBalance').textContent = '0.00 USDC';
+            }
+        }
+
+        // Set token from quick buttons
+        function setToken(token) {
+            document.getElementById('tokenInput').value = token;
+        }
+
+        // Request Analysis
+        async function requestAnalysis() {
+            const token = document.getElementById('tokenInput').value.trim().toUpperCase();
+            
+            if (!token) {
+                showNotification('Please enter a token symbol', 'warning');
+                return;
             }
 
-            // Update stats
-            const paidLogs = logs.filter(l => l.type === 'PAID');
-            totalAnalyses = paidLogs.length;
-            const totalRevenue = (totalAnalyses * 0.01).toFixed(2);
+            if (!signer) {
+                showNotification('Please connect your wallet first', 'warning');
+                return;
+            }
 
-            document.getElementById('total-analyses').textContent = totalAnalyses;
-            document.getElementById('total-revenue').textContent = `${totalRevenue} USDC`;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = 'Processing...';
 
-            // Render logs
-            const logsHTML = logs.slice(0, 20).map(log => {
-                let typeColor = '';
-                if (log.type === 'PAID') typeColor = 'color: var(--neon-green)';
-                else if (log.type === 'ERROR') typeColor = 'color: var(--neon-pink)';
-                else if (log.type === 'AI') typeColor = 'color: var(--neon-purple)';
-                else if (log.type === 'DATA') typeColor = 'color: var(--neon-cyan)';
-                else if (log.type === 'VERIFY') typeColor = 'color: var(--neon-yellow)';
-                else typeColor = 'color: var(--text-gray)';
-
-                return `
-                    <div class="log-entry ${log.type}">
-                        <div class="log-header">
-                            <span class="log-type" style="${typeColor}">[${log.type}]</span>
-                            <span class="log-time">${log.time}</span>
-                        </div>
-                        <div class="log-message">
-                            ${log.message}
-                            <span style="color: #666; font-size: 10px; margin-left: 10px;">
-                                • Agent: ${log.agent.substring(0, 12)}...
-                            </span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('logs').innerHTML = logsHTML;
-
-            // Check for consensus
-            const aiLog = logs.find(l => l.type === 'AI' && l.message.includes('agreement'));
-            
-            if (aiLog && paidLogs.length > 0) {
-                document.getElementById('waiting-panel').style.display = 'none';
-                document.getElementById('consensus-panel').style.display = 'block';
-                document.getElementById('consensus-token').textContent = latestToken;
+            try {
+                // Step 1: Request analysis (expect 402)
+                showNotification(`Requesting analysis for ${token}...`, 'success');
                 
-                // Parse consensus
-                const match = aiLog.message.match(/(\w+)\s*\((\d+)% agreement(?:,\s*(\d+)\s*rounds)?/);
-                if (match) {
-                    const signal = match[1];
-                    const agreement = match[2];
-                    const rounds = match[3] || '2';
+                let response = await fetch(`${API_URL}/api/analyze/${token}`);
+                
+                if (response.status === 402) {
+                    showNotification('Payment required. Initiating transfer...', 'warning');
                     
-                    updateConsensusDisplay(signal, agreement, rounds);
+                    // Step 2: Pay with USDC
+                    const usdcContract = new ethers.Contract(DEV_USDC_ADDRESS, ERC20_ABI, signer);
+                    
+                    showNotification('Please confirm the transaction in MetaMask...', 'warning');
+                    const tx = await usdcContract.transfer(SELLER_WALLET, PRICE_UNITS);
+                    
+                    showNotification('Transaction sent! Waiting for confirmation...', 'success');
+                    const receipt = await tx.wait();
+                    
+                    showNotification('Payment confirmed! Requesting analysis...', 'success');
+                    
+                    // Step 3: Retry with payment proof
+        response = await fetch(`${API_URL}/api/analyze/${token}`, {
+                 headers: {
+                        'x-payment-hash': receipt.transactionHash,
+                        'x-user-address': userAddress  // ADD THIS LINE
+    }
+});
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        showNotification(`✅ Analysis complete for ${token}!`, 'success');
+                        
+                        // Update wallet balance
+                        await updateWalletUI();
+                    } else {
+                        throw new Error('Analysis request failed after payment');
+                    }
+                } else if (response.ok) {
+                    showNotification(`✅ Analysis complete for ${token}!`, 'success');
+                } else {
+                    throw new Error(`Server error: ${response.status}`);
                 }
 
-                // Extract and update price
-                const price = extractPriceFromLogs(logs);
-                latestPrice = price;
-                updateMarketData(price, latestToken);
-                
-                hasShownConsensus = true;
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error: ' + error.message, 'error');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Analyze Token';
             }
-
-            document.getElementById('system-status').textContent = 'SYSTEM ONLINE';
-
-        } catch (error) {
-            console.error('Error fetching logs:', error);
-            document.getElementById('system-status').textContent = 'CONNECTION LOST';
-        }
-    }
-
-    function updateConsensusDisplay(signal, agreement, rounds) {
-        const signalEl = document.getElementById('consensus-signal');
-        signalEl.textContent = signal;
-        signalEl.className = `consensus-signal signal-${signal}`;
-        
-        document.getElementById('consensus-agreement').textContent = `${agreement}%`;
-        document.getElementById('consensus-confidence').textContent = '72%';
-        document.getElementById('consensus-rounds').textContent = rounds;
-        
-        let shortSummary = '';
-        if (signal === 'BUY') {
-            shortSummary = `Strong bullish consensus on ${latestToken}`;
-        } else if (signal === 'SELL') {
-            shortSummary = `Bearish pressure detected on ${latestToken}`;
-        } else {
-            shortSummary = `Neutral outlook, consolidation expected`;
-        }
-        document.getElementById('consensus-summary').textContent = shortSummary;
-        
-        let summaryText = '';
-        if (signal === 'BUY') {
-            summaryText = `After ${rounds} rounds of AI deliberation, our council recommends a BUY position on ${latestToken}. Market conditions show bullish momentum with strong technical indicators supporting upward movement.`;
-        } else if (signal === 'SELL') {
-            summaryText = `Following ${rounds} rounds of analysis, the AI consensus suggests a SELL signal for ${latestToken}. Multiple models detected bearish patterns and recommend reducing exposure at current levels.`;
-        } else {
-            summaryText = `Through ${rounds} rounds of multi-AI analysis, the consensus advises HOLDING ${latestToken}. Market conditions remain neutral with mixed signals - awaiting clearer directional movement before taking action.`;
-        }
-        
-        document.getElementById('analysis-text').textContent = summaryText;
-        
-        const aiModelsHTML = `
-            <div class="ai-model">
-                <div class="ai-model-header">
-                    <span class="ai-model-name">🧠 Llama 3.3 70B Strategist</span>
-                    <span class="ai-model-badge">Deep Analysis</span>
-                </div>
-                <div class="ai-model-signal">
-                    <span class="signal-indicator ${signal}">${signal}</span>
-                    <span style="font-size: 12px; color: var(--text-gray);">Long-term Perspective</span>
-                </div>
-                <div class="confidence-bar">
-                    <div class="confidence-fill" style="width: 75%"></div>
-                </div>
-                <div class="ai-model-reason">
-                    Strategic fundamentals ${signal === 'BUY' ? 'support accumulation' : signal === 'SELL' ? 'suggest distribution' : 'indicate consolidation'} at current ${latestToken} levels.
-                </div>
-            </div>
-
-            <div class="ai-model">
-                <div class="ai-model-header">
-                    <span class="ai-model-name">⚡ Llama 3.1 8B Tactician</span>
-                    <span class="ai-model-badge">Rapid Assessment</span>
-                </div>
-                <div class="ai-model-signal">
-                    <span class="signal-indicator ${signal}">${signal}</span>
-                    <span style="font-size: 12px; color: var(--text-gray);">Short-term Perspective</span>
-                </div>
-                <div class="confidence-bar">
-                    <div class="confidence-fill" style="width: 70%"></div>
-                </div>
-                <div class="ai-model-reason">
-                    Technical patterns confirm ${signal} signal with ${signal === 'BUY' ? 'bullish' : signal === 'SELL' ? 'bearish' : 'neutral'} momentum in ${latestToken} price action.
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('ai-models').innerHTML = aiModelsHTML;
-    }
-
-    function updateMarketData(price, token) {
-        if (!price || isNaN(price)) {
-            console.warn('Invalid price:', price);
-            return;
         }
 
-        // Display current price
-        const formattedPrice = price.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-        document.getElementById('market-price').textContent = `$${formattedPrice}`;
-        
-        // Calculate realistic 24h change based on volatility
-        let changeRange = 3; // default ±3%
-        if (token === 'BTC') changeRange = 2;
-        else if (token === 'ETH') changeRange = 3;
-        else if (token === 'PEPE' || token === 'DOGE') changeRange = 8;
-        
-        const changePercent = ((Math.random() * changeRange * 2) - changeRange).toFixed(2);
-        const changeEl = document.getElementById('change-value');
-        changeEl.textContent = `${changePercent >= 0 ? '+' : ''}${changePercent}%`;
-        changeEl.className = `price-change ${parseFloat(changePercent) >= 0 ? 'positive' : 'negative'}`;
-        
-        // Calculate volume based on token
-        let volume;
-        if (token === 'BTC') {
-            volume = Math.floor(Math.random() * 20000000000 + 35000000000);
-        } else if (token === 'ETH') {
-            volume = Math.floor(Math.random() * 10000000000 + 18000000000);
-        } else if (token === 'SOL') {
-            volume = Math.floor(Math.random() * 3000000000 + 5000000000);
-        } else if (token === 'CRO') {
-            volume = Math.floor(Math.random() * 200000000 + 300000000);
-        } else if (price < 1) {
-            volume = Math.floor(Math.random() * 500000000 + 500000000);
-        } else if (price > 10000) {
-            volume = Math.floor(Math.random() * 15000000000 + 25000000000);
-        } else {
-            volume = Math.floor(Math.random() * 5000000000 + 5000000000);
+        // Extract token from logs
+        function extractTokenFromLogs(logs) {
+            for (let i = 0; i < logs.length; i++) {
+                const log = logs[i];
+                
+                if (log.message.includes('FETCHING MARKET DATA FOR')) {
+                    const match = log.message.match(/FOR\s+(\w+)/i);
+                    if (match) return match[1].toUpperCase();
+                }
+                
+                if (log.type === 'DATA' && log.message.includes('Fetching')) {
+                    const match = log.message.match(/Fetching\s+(\w+)/i);
+                    if (match) return match[1].toUpperCase();
+                }
+            }
+            
+            return latestToken;
         }
-        
-        const formattedVolume = volume.toLocaleString('en-US', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
-        document.getElementById('market-volume').textContent = `$${formattedVolume}`;
-        
-        console.log(`Market data updated: ${token} = $${formattedPrice}, Change: ${changePercent}%, Volume: $${formattedVolume}`);
-    }
 
-    // Auto-refresh every 2 seconds
-    setInterval(updateLogs, 2000);
-    
-    // Initial load
-    updateLogs();
-</script>
+        // Extract price from logs
+        function extractPriceFromLogs(logs) {
+            for (let i = 0; i < logs.length; i++) {
+                const log = logs[i];
+                
+                if (log.type === 'DATA' && log.message.includes('=')) {
+                    const match = log.message.match(/=\s*\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+                    if (match) return parseFloat(match[1].replace(/,/g, ''));
+                }
+                
+                if (log.message.includes('Data acquired') || log.message.includes('✅')) {
+                    const match = log.message.match(/\$(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+                    if (match) return parseFloat(match[1].replace(/,/g, ''));
+                }
+            }
+            
+            const defaults = {
+                'BTC': 92500, 'ETH': 3350, 'CRO': 0.15, 'SOL': 145,
+                'BNB': 620, 'ADA': 0.85, 'PEPE': 0.000015
+            };
+            
+            return latestPrice || defaults[latestToken] || 1000;
+        }
+
+        // Update logs
+        async function updateLogs() {
+            try {
+                const response = await fetch(`${API_URL}/logs`);
+                const logs = await response.json();
+
+                if (logs.length === 0) return;
+
+                const currentToken = extractTokenFromLogs(logs);
+                if (currentToken !== latestToken) {
+                    latestToken = currentToken;
+                    latestPrice = null;
+                }
+
+                const paidLogs = logs.filter(l => l.type === 'PAID');
+                totalAnalyses = paidLogs.length;
+                const totalRevenue = (totalAnalyses * 0.01).toFixed(2);
+
+                document.getElementById('total-analyses').textContent = totalAnalyses;
+                document.getElementById('total-revenue').textContent = `${totalRevenue} USDC`;
+
+                const logsHTML = logs.slice(0, 20).map(log => {
+                    let typeColor = '';
+                    if (log.type === 'PAID') typeColor = 'color: var(--neon-green)';
+                    else if (log.type === 'ERROR') typeColor = 'color: var(--neon-pink)';
+                    else if (log.type === 'AI') typeColor = 'color: var(--neon-purple)';
+                    else if (log.type === 'DATA') typeColor = 'color: var(--neon-cyan)';
+                    else if (log.type === 'VERIFY') typeColor = 'color: var(--neon-yellow)';
+                    else typeColor = 'color: var(--text-gray)';
+
+                    return `
+                        <div class="log-entry ${log.type}">
+                            <div class="log-header">
+                                <span class="log-type" style="${typeColor}">[${log.type}]</span>
+                                <span class="log-time">${log.time}</span>
+                            </div>
+                            <div class="log-message">
+                                ${log.message}
+                                <span style="color: #666; font-size: 10px; margin-left: 10px;">
+                                    • Agent: ${log.agent.substring(0, 12)}...
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                document.getElementById('logs').innerHTML = logsHTML;
+
+                const aiLog = logs.find(l => l.type === 'AI' && l.message.includes('agreement'));
+                
+                if (aiLog && paidLogs.length > 0) {
+                    document.getElementById('waiting-panel').style.display = 'none';
+                    document.getElementById('consensus-panel').style.display = 'block';
+                    document.getElementById('consensus-token').textContent = latestToken;
+                    
+                    const match = aiLog.message.match(/(\w+)\s*\((\d+)% agreement(?:,\s*(\d+)\s*rounds)?/);
+                    if (match) {
+                        const signal = match[1];
+                        const agreement = match[2];
+                        const rounds = match[3] || '2';
+                        
+                        updateConsensusDisplay(signal, agreement, rounds);
+                    }
+
+                    const price = extractPriceFromLogs(logs);
+                    latestPrice = price;
+                    updateMarketData(price, latestToken);
+                }
+
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+            }
+        }
+
+        function updateConsensusDisplay(signal, agreement, rounds) {
+            const signalEl = document.getElementById('consensus-signal');
+            signalEl.textContent = signal;
+            signalEl.className = `consensus-signal signal-${signal}`;
+            
+            document.getElementById('consensus-agreement').textContent = `${agreement}%`;
+            document.getElementById('consensus-confidence').textContent = '72%';
+            document.getElementById('consensus-rounds').textContent = rounds;
+            
+            let shortSummary = '';
+            if (signal === 'BUY') {
+                shortSummary = `Strong bullish consensus on ${latestToken}`;
+            } else if (signal === 'SELL') {
+                shortSummary = `Bearish pressure detected on ${latestToken}`;
+            } else {
+                shortSummary = `Neutral outlook, consolidation expected`;
+            }
+            document.getElementById('consensus-summary').textContent = shortSummary;
+            
+            let summaryText = '';
+            if (signal === 'BUY') {
+                summaryText = `After ${rounds} rounds of AI deliberation, our council recommends a BUY position on ${latestToken}. Market conditions show bullish momentum with strong technical indicators supporting upward movement.`;
+            } else if (signal === 'SELL') {
+                summaryText = `Following ${rounds} rounds of analysis, the AI consensus suggests a SELL signal for ${latestToken}. Multiple models detected bearish patterns and recommend reducing exposure at current levels.`;
+            } else {
+                summaryText = `Through ${rounds} rounds of multi-AI analysis, the consensus advises HOLDING ${latestToken}. Market conditions remain neutral with mixed signals - awaiting clearer directional movement before taking action.`;
+            }
+            
+            document.getElementById('analysis-text').textContent = summaryText;
+            
+            const aiModelsHTML = `
+                <div class="ai-model">
+                    <div class="ai-model-header">
+                        <span class="ai-model-name">🧠 Llama 3.3 70B Strategist</span>
+                        <span class="ai-model-badge">Deep Analysis</span>
+                    </div>
+                    <div class="ai-model-signal">
+                        <span class="signal-indicator ${signal}">${signal}</span>
+                        <span style="font-size: 12px; color: var(--text-gray);">Long-term Perspective</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 75%"></div>
+                    </div>
+                    <div class="ai-model-reason">
+                        Strategic fundamentals ${signal === 'BUY' ? 'support accumulation' : signal === 'SELL' ? 'suggest distribution' : 'indicate consolidation'} at current ${latestToken} levels.
+                    </div>
+                </div>
+
+                <div class="ai-model">
+                    <div class="ai-model-header">
+                        <span class="ai-model-name">⚡ Llama 3.1 8B Tactician</span>
+                        <span class="ai-model-badge">Rapid Assessment</span>
+                    </div>
+                    <div class="ai-model-signal">
+                        <span class="signal-indicator ${signal}">${signal}</span>
+                        <span style="font-size: 12px; color: var(--text-gray);">Short-term Perspective</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 70%"></div>
+                    </div>
+                    <div class="ai-model-reason">
+                        Technical patterns confirm ${signal} signal with ${signal === 'BUY' ? 'bullish' : signal === 'SELL' ? 'bearish' : 'neutral'} momentum in ${latestToken} price action.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('ai-models').innerHTML = aiModelsHTML;
+        }
+
+        function updateMarketData(price, token) {
+            if (!price || isNaN(price)) return;
+
+            const formattedPrice = price.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            document.getElementById('market-price').textContent = `$${formattedPrice}`;
+            
+            let changeRange = 3;
+            if (token === 'BTC') changeRange = 2;
+            else if (token === 'ETH') changeRange = 3;
+            else if (token === 'PEPE' || token === 'DOGE') changeRange = 8;
+            
+            const changePercent = ((Math.random() * changeRange * 2) - changeRange).toFixed(2);
+            const changeEl = document.getElementById('change-value');
+            changeEl.textContent = `${changePercent >= 0 ? '+' : ''}${changePercent}%`;
+            changeEl.className = `price-change ${parseFloat(changePercent) >= 0 ? 'positive' : 'negative'}`;
+            
+            let volume;
+            if (token === 'BTC') {
+                volume = Math.floor(Math.random() * 20000000000 + 35000000000);
+            } else if (token === 'ETH') {
+                volume = Math.floor(Math.random() * 10000000000 + 18000000000);
+            } else if (token === 'CRO') {
+                volume = Math.floor(Math.random() * 200000000 + 300000000);
+            } else {
+                volume = Math.floor(Math.random() * 5000000000 + 5000000000);
+            }
+            
+            const formattedVolume = volume.toLocaleString('en-US');
+            document.getElementById('market-volume').textContent = `$${formattedVolume}`;
+        }
+
+        // Listen for account changes
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', function (accounts) {
+                if (accounts.length === 0) {
+                    location.reload();
+                } else {
+                    connectWallet();
+                }
+            });
+
+            window.ethereum.on('chainChanged', function (chainId) {
+                if (chainId !== CRONOS_TESTNET_CHAIN_ID) {
+                    switchToCronosTestnet();
+                }
+            });
+        }
+
+        // Auto-refresh logs
+        setInterval(updateLogs, 2000);
+        updateLogs();
+    </script>
 </body>
 </html>
