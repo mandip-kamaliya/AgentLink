@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = 3000;
-const SELLER_WALLET = process.env.SELLER_WALLET;
+const SELLER_WALLET = process.env.SELLER_WALLET.toLowerCase(); // Lowercase for comparison
 const PROVIDER_URL = "https://evm-t3.cronos.org";
 const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
 const DEV_USDC_ADDRESS = "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0";
@@ -23,10 +23,10 @@ if (process.env.GROQ_API_KEY) {
   console.log("✅ Multi-Round AI Consensus Engine initialized");
 }
 
-// AI Council - Working models only
+// AI Council
 const AI_COUNCIL = [
-  { name: "Llama 3.3 70B Strategist", model: "llama-3.3-70b-versatile", specialty: "Deep Strategic Analysis", perspective: "long-term" },
-  { name: "Llama 3.1 8B Tactician", model: "llama-3.1-8b-instant", specialty: "Rapid Tactical Assessment", perspective: "short-term" }
+  { name: "Llama 3.3 70B Strategist", model: "llama-3.3-70b-versatile", specialty: "Deep Analysis", perspective: "long-term" },
+  { name: "Llama 3.1 8B Tactician", model: "llama-3.1-8b-instant", specialty: "Rapid Technical Assessment", perspective: "short-term" }
 ];
 
 const logs = [];
@@ -37,42 +37,109 @@ function logEvent(type, agent, message) {
   console.log(`[${time}] ${type}: ${message}`);
 }
 
-async function verifyTokenPayment(txHash) {
+// UPDATED: Verify Direct ERC-20 Transfer with better debugging
+async function verifyDirectTransfer(txHash, userAddress) {
   console.log(`🔎 LOOKING FOR RECEIPT: ${txHash}`);
+  console.log(`   User Address: ${userAddress}`);
+  console.log(`   Seller Address: ${SELLER_WALLET}`);
+  
   for (let i = 0; i < 5; i++) {
     try {
       const receipt = await provider.getTransactionReceipt(txHash);
+      
       if (!receipt) {
         console.log(`   ...attempt ${i+1}/5`);
         await new Promise(r => setTimeout(r, 2000));
         continue;
       }
-      console.log(`   ✅ RECEIPT FOUND`);
+
+      console.log(`   ✅ RECEIPT FOUND with ${receipt.logs.length} logs`);
+      
+      // Verify transaction was successful
+      if (receipt.status !== 1) {
+        console.log(`   ❌ Transaction failed (status: ${receipt.status})`);
+        return false;
+      }
+
+      // ERC-20 Transfer event signature
       const transferTopic = ethers.id("Transfer(address,address,uint256)");
-      const sellerTopic = ethers.zeroPadValue(SELLER_WALLET, 32);
-      const paymentLog = receipt.logs.find(log => {
-        return log.address.toLowerCase() === DEV_USDC_ADDRESS.toLowerCase() &&
-               log.topics[0] === transferTopic &&
-               log.topics[2].toLowerCase() === sellerTopic.toLowerCase();
+      
+      console.log(`   🔍 Searching for Transfer events...`);
+      
+      // Log all events for debugging
+      receipt.logs.forEach((log, index) => {
+        console.log(`   Log ${index}:`);
+        console.log(`      Address: ${log.address}`);
+        console.log(`      Topic[0]: ${log.topics[0]}`);
+        if (log.topics.length > 1) console.log(`      Topic[1] (from): ${log.topics[1]}`);
+        if (log.topics.length > 2) console.log(`      Topic[2] (to): ${log.topics[2]}`);
       });
-      if (paymentLog) {
-        const amount = BigInt(paymentLog.data).toString();
+
+      // Find the Transfer event from the USDC contract
+      const transferLog = receipt.logs.find(log => {
+        const isUSDC = log.address.toLowerCase() === DEV_USDC_ADDRESS.toLowerCase();
+        const isTransfer = log.topics[0] === transferTopic;
+        const hasTopics = log.topics.length === 3;
+        
+        if (isUSDC && isTransfer && hasTopics) {
+          // Extract addresses from topics (they are padded to 32 bytes)
+          const fromAddress = '0x' + log.topics[1].slice(26); // Remove padding
+          const toAddress = '0x' + log.topics[2].slice(26);   // Remove padding
+          
+          console.log(`   📋 Found Transfer event:`);
+          console.log(`      From: ${fromAddress}`);
+          console.log(`      To: ${toAddress}`);
+          console.log(`      Expected From: ${userAddress.toLowerCase()}`);
+          console.log(`      Expected To: ${SELLER_WALLET.toLowerCase()}`);
+          
+          const fromMatches = fromAddress.toLowerCase() === userAddress.toLowerCase();
+          const toMatches = toAddress.toLowerCase() === SELLER_WALLET.toLowerCase();
+          
+          console.log(`      From matches: ${fromMatches}`);
+          console.log(`      To matches: ${toMatches}`);
+          
+          return fromMatches && toMatches;
+        }
+        
+        return false;
+      });
+
+      if (transferLog) {
+        const amount = BigInt(transferLog.data).toString();
+        const amountFormatted = ethers.formatUnits(amount, 6);
+        console.log(`   💰 Amount: ${amountFormatted} USDC (${amount} units)`);
+        console.log(`   📊 Required: ${ethers.formatUnits(PRICE_UNITS, 6)} USDC (${PRICE_UNITS} units)`);
+        
         if (BigInt(amount) >= BigInt(PRICE_UNITS)) {
-          console.log(`   💰 CONFIRMED: ${ethers.formatUnits(amount, 6)} USDC`);
+          console.log(`   ✅ CONFIRMED: Payment verified`);
           return true;
+        } else {
+          console.log(`   ❌ Amount too low: ${amount} < ${PRICE_UNITS}`);
+          return false;
         }
       }
+      
+      console.log(`   ❌ No matching Transfer event found`);
+      console.log(`   💡 This might mean:`);
+      console.log(`      - Wrong token was transferred`);
+      console.log(`      - Transfer wasn't to the seller address`);
+      console.log(`      - Transaction was to a different contract`);
       return false;
+
     } catch (e) {
       console.error("   ❌ RPC Error:", e.message);
       await new Promise(r => setTimeout(r, 2000));
     }
   }
+  
+  console.log(`   ❌ TIMEOUT: Could not verify payment after 5 attempts`);
   return false;
 }
-
+// UPDATED: x402 Middleware for Direct Transfers
 const x402Protocol = async (req, res, next) => {
   const txHash = req.headers['x-payment-hash'] || req.headers['payment-hash'];
+  const userAddress = req.headers['x-user-address'] || req.headers['user-address'];
+
   if (!txHash) {
     logEvent("BLOCK", "Anonymous", "Sending 402 Invoice");
     return res.status(402).json({
@@ -90,13 +157,20 @@ const x402Protocol = async (req, res, next) => {
       token: DEV_USDC_ADDRESS
     });
   }
-  logEvent("VERIFY", "System", `Checking ${txHash.slice(0, 10)}...`);
-  const isValid = await verifyTokenPayment(txHash);
+
+  if (!userAddress) {
+    logEvent("ERROR", "System", "Missing user address");
+    return res.status(400).json({ error: "User address required" });
+  }
+
+  logEvent("VERIFY", "System", `Checking ${txHash.slice(0, 10)}... from ${userAddress.slice(0, 10)}...`);
+  const isValid = await verifyDirectTransfer(txHash, userAddress);
+
   if (isValid) {
     logEvent("PAID", "Agent", "✅ Verified");
     next();
   } else {
-    logEvent("ERROR", "Fraud", "Failed");
+    logEvent("ERROR", "Fraud", "Payment verification failed");
     res.status(403).json({ error: "Invalid Payment" });
   }
 };
@@ -166,16 +240,16 @@ async function fetchCoinGeckoPrice(token) {
   return null;
 }
 
-// 🚀 INNOVATION: Multi-Round Deliberative Consensus
+// Multi-Round Consensus
 async function getMultiRoundConsensus(token, marketData) {
-  console.log(`\n🤖 INITIATING MULTI-ROUND CONSENSUS PROTOCOL`);
-  console.log(`${"=".repeat(70)}`);
+  console.log(`\n🤖 CONVENING AI COUNCIL (${AI_COUNCIL.length} models)...`);
+  console.log(`${"─".repeat(60)}`);
   
   const allAnalyses = [];
   
-  // ROUND 1: Independent Analysis
+  // Round 1: Independent Analysis
   console.log(`\n📍 ROUND 1: Independent Analysis`);
-  console.log(`${"─".repeat(70)}`);
+  console.log(`${"─".repeat(60)}`);
   
   for (const ai of AI_COUNCIL) {
     try {
@@ -222,9 +296,9 @@ REASON: [One detailed sentence]`;
     }
   }
   
-  // ROUND 2: Cross-Examination with Counter-Arguments
+  // Round 2: Cross-Examination
   console.log(`\n📍 ROUND 2: Cross-Examination & Refinement`);
-  console.log(`${"─".repeat(70)}`);
+  console.log(`${"─".repeat(60)}`);
   
   const round1Results = allAnalyses.map(a => `${a.model}: ${a.signal} (${a.confidence}%) - ${a.reason}`).join("\n");
   
@@ -278,15 +352,13 @@ REASON: [Why you agree/disagree with peer analysis]`;
     }
   }
   
-  // ROUND 3: Final Consensus Vote
-  console.log(`\n📍 ROUND 3: Final Consensus Formation`);
-  console.log(`${"─".repeat(70)}`);
+  console.log(`${"─".repeat(60)}`);
   
-  const round2Analyses = allAnalyses.filter(a => a.round === 2);
-  
-  // Calculate weighted consensus
+  // Calculate consensus
   const votes = { BUY: 0, SELL: 0, HOLD: 0 };
   const weightedScores = { BUY: 0, SELL: 0, HOLD: 0 };
+  
+  const round2Analyses = allAnalyses.filter(a => a.round === 2);
   
   round2Analyses.forEach(a => {
     votes[a.signal]++;
@@ -299,24 +371,27 @@ REASON: [Why you agree/disagree with peer analysis]`;
   
   const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
   const agreementRate = totalVotes > 0 ? (votes[consensus] / totalVotes * 100).toFixed(0) : 0;
-  const avgConfidence = round2Analyses.reduce((sum, a) => sum + a.confidence, 0) / round2Analyses.length;
   
-  // Track evolution
+  const validAnalyses = round2Analyses;
+  const avgConfidence = validAnalyses.length > 0 
+    ? validAnalyses.reduce((sum, a) => sum + a.confidence, 0) / validAnalyses.length
+    : 0;
+  
+  console.log(`\n📊 CONSENSUS REACHED:`);
+  console.log(`   Signal: ${consensus}`);
+  console.log(`   Agreement: ${agreementRate}% (${votes[consensus]}/${totalVotes} models)`);
+  console.log(`   Avg Confidence: ${avgConfidence.toFixed(0)}%`);
+  console.log(`   Votes: BUY=${votes.BUY}, SELL=${votes.SELL}, HOLD=${votes.HOLD}\n`);
+  
+  const reasons = validAnalyses.map(a => a.reason).join(" ");
+  const trend = marketData.change >= 0 ? "up" : "down";
+  const emoji = consensus === "BUY" ? "🚀" : consensus === "SELL" ? "📉" : "⏸️";
+  
   const round1Signals = allAnalyses.filter(a => a.round === 1).map(a => a.signal);
   const round2Signals = allAnalyses.filter(a => a.round === 2).map(a => a.signal);
   const signalsChanged = round1Signals.some((s, i) => s !== round2Signals[i]);
   
-  console.log(`\n📊 FINAL CONSENSUS:`);
-  console.log(`   Signal: ${consensus}`);
-  console.log(`   Agreement: ${agreementRate}%`);
-  console.log(`   Confidence: ${avgConfidence.toFixed(0)}%`);
-  console.log(`   Evolution: ${signalsChanged ? '🔄 Positions adjusted after deliberation' : '✓ Consistent across rounds'}`);
-  console.log(`   Votes: BUY=${votes.BUY}, SELL=${votes.SELL}, HOLD=${votes.HOLD}\n`);
-  
-  const trend = marketData.change >= 0 ? "up" : "down";
-  const emoji = consensus === "BUY" ? "🚀" : consensus === "SELL" ? "📉" : "⏸️";
-  
-  const summary = `${emoji} ${consensus} - After ${allAnalyses.length} rounds of deliberation, our AI council reached ${agreementRate}% consensus on ${token} at $${marketData.price} (${trend} ${Math.abs(marketData.change).toFixed(2)}%). Final confidence: ${avgConfidence.toFixed(0)}%. ${signalsChanged ? 'Positions were refined through peer review.' : 'Analysis remained consistent.'}`;
+  const summary = `${emoji} ${consensus} - After 2 rounds of deliberation, our AI council reached ${agreementRate}% consensus on ${token} at $${marketData.price} (${trend} ${Math.abs(marketData.change).toFixed(2)}%). Final confidence: ${avgConfidence.toFixed(0)}%. ${signalsChanged ? 'Positions were refined through peer review.' : 'Analysis remained consistent.'}`;
   
   return {
     consensus: {
@@ -420,7 +495,7 @@ app.listen(PORT, () => {
   console.log(`      ✓ Multi-Round Deliberative Consensus (2 rounds)`);
   console.log(`      ✓ Peer Review & Cross-Examination`);
   console.log(`      ✓ Confidence Evolution Tracking`);
-  console.log(`      ✓ Signal Refinement Through Debate`);
+  console.log(`      ✓ Direct ERC-20 Transfer Support`);
   console.log(`      ✓ HTTP 402 Payment Protocol`);
   console.log(`${"=".repeat(70)}\n`);
 });
