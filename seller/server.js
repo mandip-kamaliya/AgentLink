@@ -20,31 +20,13 @@ const PRICE_UNITS = "10000";
 let groqClient = null;
 if (process.env.GROQ_API_KEY) {
   groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  console.log("✅ Multi-AI Consensus Engine initialized");
+  console.log("✅ Multi-Round AI Consensus Engine initialized");
 }
 
-// 🚀 INNOVATION: DIVERSE AI COUNCIL (Optimized for Groq Free Tier)
-// AI Council - 3 Verified Working Models (The "Llama Trinity")
-// AI Council - Optimized for Rate Limits (Big, Small, Medium)
+// AI Council - Working models only
 const AI_COUNCIL = [
-  // 1. The Strategist (Heavy 70B)
-  { 
-    name: "Llama 3.3 70B", 
-    model: "llama-3.3-70b-versatile", 
-    specialty: "Market Strategy" 
-  },
-  // 2. The Analyst (Fast 8B)
-  { 
-    name: "Llama 3.1 8B", 
-    model: "llama-3.1-8b-instant", 
-    specialty: "Technical Analysis" 
-  },
-  // 3. The Visionary (New 11B - Different Rate Limit Bucket)
- { 
-    name: "Gemma 2 9B", 
-    model: "gemma2-9b-it", 
-    specialty: "Sentiment Analysis" 
-  }
+  { name: "Llama 3.3 70B Strategist", model: "llama-3.3-70b-versatile", specialty: "Deep Strategic Analysis", perspective: "long-term" },
+  { name: "Llama 3.1 8B Tactician", model: "llama-3.1-8b-instant", specialty: "Rapid Tactical Assessment", perspective: "short-term" }
 ];
 
 const logs = [];
@@ -184,32 +166,32 @@ async function fetchCoinGeckoPrice(token) {
   return null;
 }
 
-// 🚀 INNOVATION: Multi-AI Consensus System
-async function getMultiAIConsensus(token, marketData) {
-  console.log(`\n🤖 CONVENING AI COUNCIL (${AI_COUNCIL.length} models)...`);
-  console.log(`${"─".repeat(60)}`);
+// 🚀 INNOVATION: Multi-Round Deliberative Consensus
+async function getMultiRoundConsensus(token, marketData) {
+  console.log(`\n🤖 INITIATING MULTI-ROUND CONSENSUS PROTOCOL`);
+  console.log(`${"=".repeat(70)}`);
   
-  const analyses = [];
+  const allAnalyses = [];
   
-  // Query each AI model
+  // ROUND 1: Independent Analysis
+  console.log(`\n📍 ROUND 1: Independent Analysis`);
+  console.log(`${"─".repeat(70)}`);
+  
   for (const ai of AI_COUNCIL) {
     try {
-      console.log(`   ⚙️  Consulting ${ai.name} (${ai.specialty})...`);
+      console.log(`   ⚙️  ${ai.name} analyzing...`);
       
-      const prompt = `You are a professional crypto trader analyzing ${token}.
+      const prompt = `You are a ${ai.perspective} crypto trader (${ai.specialty}).
 
-Market Data:
-- Current Price: $${marketData.price}
+Market Data for ${token}:
+- Price: $${marketData.price}
 - 24h Change: ${marketData.change}%
 - Volume: $${marketData.volume?.toLocaleString() || 'N/A'}
-- Source: ${marketData.source}
 
-Task: Provide a trading signal. Respond in this EXACT format:
+Provide analysis in EXACT format:
 SIGNAL: [BUY/SELL/HOLD]
 CONFIDENCE: [0-100]%
-REASON: [One sentence explaining why]
-
-Be concise and direct.`;
+REASON: [One detailed sentence]`;
       
       const completion = await groqClient.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
@@ -219,88 +201,136 @@ Be concise and direct.`;
       });
       
       const response = completion.choices[0].message.content;
-      
-      // Parse response
       const signalMatch = response.match(/SIGNAL:\s*(BUY|SELL|HOLD)/i);
       const confidenceMatch = response.match(/CONFIDENCE:\s*(\d+)/);
       const reasonMatch = response.match(/REASON:\s*(.+)/i);
       
-      const signal = signalMatch ? signalMatch[1].toUpperCase() : "HOLD";
-      const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 50;
-      const reason = reasonMatch ? reasonMatch[1].trim() : "Analysis complete";
-      
-      analyses.push({
+      const analysis = {
+        round: 1,
         model: ai.name,
-        specialty: ai.specialty,
-        signal,
-        confidence,
-        reason
-      });
+        perspective: ai.perspective,
+        signal: signalMatch ? signalMatch[1].toUpperCase() : "HOLD",
+        confidence: confidenceMatch ? parseInt(confidenceMatch[1]) : 50,
+        reason: reasonMatch ? reasonMatch[1].trim() : "Analysis complete"
+      };
       
-      console.log(`      ✓ ${ai.name}: ${signal} (${confidence}% confidence)`);
+      allAnalyses.push(analysis);
+      console.log(`      ✓ ${analysis.signal} (${analysis.confidence}%): ${analysis.reason.slice(0, 60)}...`);
       
     } catch (e) {
-      console.log(`      ✗ ${ai.name}: ERROR - ${e.message.slice(0, 50)}`);
-      // Add fallback analysis
-      analyses.push({
-        model: ai.name,
-        specialty: ai.specialty,
-        signal: "HOLD",
-        confidence: 0,
-        reason: "Model unavailable",
-        error: true
-      });
+      console.log(`      ✗ ERROR: ${e.message.slice(0, 50)}`);
     }
   }
   
-  console.log(`${"─".repeat(60)}`);
+  // ROUND 2: Cross-Examination with Counter-Arguments
+  console.log(`\n📍 ROUND 2: Cross-Examination & Refinement`);
+  console.log(`${"─".repeat(70)}`);
   
-  // Calculate consensus
+  const round1Results = allAnalyses.map(a => `${a.model}: ${a.signal} (${a.confidence}%) - ${a.reason}`).join("\n");
+  
+  for (const ai of AI_COUNCIL) {
+    try {
+      console.log(`   ⚙️  ${ai.name} reviewing peer analysis...`);
+      
+      const prompt = `You are a ${ai.perspective} crypto trader.
+
+Your colleague's analysis:
+${round1Results}
+
+Current ${token} price: $${marketData.price}, change: ${marketData.change}%
+
+Review the analysis above. Do you:
+- AGREE with the signals?
+- Want to CHANGE your position?
+- Adjust your CONFIDENCE?
+
+Respond in EXACT format:
+SIGNAL: [BUY/SELL/HOLD]
+CONFIDENCE: [0-100]%
+REASON: [Why you agree/disagree with peer analysis]`;
+      
+      const completion = await groqClient.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: ai.model,
+        temperature: 0.8,
+        max_tokens: 150
+      });
+      
+      const response = completion.choices[0].message.content;
+      const signalMatch = response.match(/SIGNAL:\s*(BUY|SELL|HOLD)/i);
+      const confidenceMatch = response.match(/CONFIDENCE:\s*(\d+)/);
+      const reasonMatch = response.match(/REASON:\s*(.+)/i);
+      
+      const analysis = {
+        round: 2,
+        model: ai.name,
+        perspective: ai.perspective,
+        signal: signalMatch ? signalMatch[1].toUpperCase() : "HOLD",
+        confidence: confidenceMatch ? parseInt(confidenceMatch[1]) : 50,
+        reason: reasonMatch ? reasonMatch[1].trim() : "Analysis refined"
+      };
+      
+      allAnalyses.push(analysis);
+      console.log(`      ✓ ${analysis.signal} (${analysis.confidence}%): ${analysis.reason.slice(0, 60)}...`);
+      
+    } catch (e) {
+      console.log(`      ✗ ERROR: ${e.message.slice(0, 50)}`);
+    }
+  }
+  
+  // ROUND 3: Final Consensus Vote
+  console.log(`\n📍 ROUND 3: Final Consensus Formation`);
+  console.log(`${"─".repeat(70)}`);
+  
+  const round2Analyses = allAnalyses.filter(a => a.round === 2);
+  
+  // Calculate weighted consensus
   const votes = { BUY: 0, SELL: 0, HOLD: 0 };
   const weightedScores = { BUY: 0, SELL: 0, HOLD: 0 };
   
-  analyses.forEach(a => {
-    if (!a.error) {
-      votes[a.signal]++;
-      weightedScores[a.signal] += a.confidence;
-    }
+  round2Analyses.forEach(a => {
+    votes[a.signal]++;
+    weightedScores[a.signal] += a.confidence;
   });
   
-  // Determine consensus (weighted by confidence)
   const consensus = Object.keys(weightedScores).reduce((a, b) => 
     weightedScores[a] > weightedScores[b] ? a : b
   );
   
   const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
   const agreementRate = totalVotes > 0 ? (votes[consensus] / totalVotes * 100).toFixed(0) : 0;
+  const avgConfidence = round2Analyses.reduce((sum, a) => sum + a.confidence, 0) / round2Analyses.length;
   
-  // Calculate overall confidence
-  const validAnalyses = analyses.filter(a => !a.error);
-  const avgConfidence = validAnalyses.length > 0 
-    ? validAnalyses.reduce((sum, a) => sum + a.confidence, 0) / validAnalyses.length
-    : 0;
+  // Track evolution
+  const round1Signals = allAnalyses.filter(a => a.round === 1).map(a => a.signal);
+  const round2Signals = allAnalyses.filter(a => a.round === 2).map(a => a.signal);
+  const signalsChanged = round1Signals.some((s, i) => s !== round2Signals[i]);
   
-  console.log(`\n📊 CONSENSUS REACHED:`);
+  console.log(`\n📊 FINAL CONSENSUS:`);
   console.log(`   Signal: ${consensus}`);
-  console.log(`   Agreement: ${agreementRate}% (${votes[consensus]}/${totalVotes} models)`);
-  console.log(`   Avg Confidence: ${avgConfidence.toFixed(0)}%`);
+  console.log(`   Agreement: ${agreementRate}%`);
+  console.log(`   Confidence: ${avgConfidence.toFixed(0)}%`);
+  console.log(`   Evolution: ${signalsChanged ? '🔄 Positions adjusted after deliberation' : '✓ Consistent across rounds'}`);
   console.log(`   Votes: BUY=${votes.BUY}, SELL=${votes.SELL}, HOLD=${votes.HOLD}\n`);
   
-  // Generate summary
-  const reasons = validAnalyses.map(a => a.reason).join(" ");
   const trend = marketData.change >= 0 ? "up" : "down";
   const emoji = consensus === "BUY" ? "🚀" : consensus === "SELL" ? "📉" : "⏸️";
   
-  const summary = `${emoji} CONSENSUS: ${consensus} - Our AI council analyzed ${marketData.source} data showing ${token} at $${marketData.price} (${trend} ${Math.abs(marketData.change).toFixed(2)}%). ${validAnalyses.length} models agreed on this signal with reasons including: ${reasons.slice(0, 200)}...`;
+  const summary = `${emoji} ${consensus} - After ${allAnalyses.length} rounds of deliberation, our AI council reached ${agreementRate}% consensus on ${token} at $${marketData.price} (${trend} ${Math.abs(marketData.change).toFixed(2)}%). Final confidence: ${avgConfidence.toFixed(0)}%. ${signalsChanged ? 'Positions were refined through peer review.' : 'Analysis remained consistent.'}`;
   
   return {
     consensus: {
       signal: consensus,
       agreement: `${agreementRate}%`,
       confidence: `${avgConfidence.toFixed(0)}%`,
-      votes
+      votes,
+      rounds: 2,
+      evolution: signalsChanged ? "adjusted" : "consistent"
     },
-    individual_analyses: analyses,
+    analyses_by_round: {
+      round_1: allAnalyses.filter(a => a.round === 1),
+      round_2: allAnalyses.filter(a => a.round === 2)
+    },
     summary
   };
 }
@@ -325,23 +355,23 @@ app.get("/api/analyze/:token", x402Protocol, async (req, res) => {
 
   if (groqClient) {
     try {
-      console.log(`\n2️⃣  INITIATING MULTI-AI CONSENSUS ANALYSIS...`);
-      aiAnalysis = await getMultiAIConsensus(token, marketData);
-      logEvent("AI", "Consensus", `${aiAnalysis.consensus.signal} (${aiAnalysis.consensus.agreement} agreement)`);
+      console.log(`\n2️⃣  INITIATING MULTI-ROUND CONSENSUS...`);
+      aiAnalysis = await getMultiRoundConsensus(token, marketData);
+      logEvent("AI", "Consensus", `${aiAnalysis.consensus.signal} (${aiAnalysis.consensus.agreement} agreement, ${aiAnalysis.consensus.rounds} rounds)`);
     } catch (e) {
       console.error(`   ❌ Consensus Error: ${e.message}`);
       const trend = marketData.change >= 0 ? "up" : "down";
       aiAnalysis = {
-        consensus: { signal: "HOLD", agreement: "N/A", confidence: "0%", votes: {} },
-        individual_analyses: [],
+        consensus: { signal: "HOLD", agreement: "N/A", confidence: "0%", votes: {}, rounds: 0 },
+        analyses_by_round: { round_1: [], round_2: [] },
         summary: `${marketData.source}: ${token} at $${marketData.price}, ${trend} ${Math.abs(marketData.change || 0).toFixed(2)}%`
       };
     }
   } else {
     aiAnalysis = {
-      consensus: { signal: "HOLD", agreement: "N/A", confidence: "0%", votes: {} },
-      individual_analyses: [],
-      summary: `${marketData.source}: ${token} at $${marketData.price}. Configure GROQ_API_KEY for AI consensus.`
+      consensus: { signal: "HOLD", agreement: "N/A", confidence: "0%", votes: {}, rounds: 0 },
+      analyses_by_round: { round_1: [], round_2: [] },
+      summary: `${marketData.source}: ${token} at $${marketData.price}. Configure GROQ_API_KEY.`
     };
   }
 
@@ -354,56 +384,43 @@ app.get("/api/analyze/:token", x402Protocol, async (req, res) => {
     market_stats: {
       price: marketData.price,
       volume: marketData.volume,
-      change: marketData.change,
-      high: marketData.high,
-      low: marketData.low
+      change: marketData.change
     },
     ai_consensus: {
       signal: aiAnalysis.consensus.signal,
       agreement: aiAnalysis.consensus.agreement,
       confidence: aiAnalysis.consensus.confidence,
       votes: aiAnalysis.consensus.votes,
+      rounds: aiAnalysis.consensus.rounds,
+      evolution: aiAnalysis.consensus.evolution,
       summary: aiAnalysis.summary
     },
-    individual_analyses: aiAnalysis.individual_analyses,
-    served_by: "AgentLink Pro - Multi-AI Consensus Engine",
+    analyses_by_round: aiAnalysis.analyses_by_round,
+    served_by: "AgentLink Pro - Multi-Round Deliberative Consensus",
     timestamp: new Date().toISOString()
   });
 });
 
 app.get('/logs', (req, res) => res.json(logs));
 
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'online',
-    ai_models: AI_COUNCIL.length,
-    consensus_enabled: !!groqClient,
-    data_sources: ['Crypto.com Exchange', 'CoinGecko'],
-    uptime: process.uptime()
-  });
-});
-
 app.listen(PORT, () => {
   console.log(`\n${"=".repeat(70)}`);
-  console.log(`🟢 AGENTLINK PRO - MULTI-AI CONSENSUS ENGINE`);
+  console.log(`🟢 AGENTLINK PRO - MULTI-ROUND CONSENSUS ENGINE`);
   console.log(`${"=".repeat(70)}`);
   console.log(`   🌐 Port: ${PORT}`);
-  console.log(`   💰 Price: 0.01 USDC per consensus analysis`);
+  console.log(`   💰 Price: 0.01 USDC per multi-round analysis`);
   console.log(`   📬 Seller: ${SELLER_WALLET.slice(0,6)}...${SELLER_WALLET.slice(-4)}`);
   console.log(``);
-  console.log(`   🤖 AI COUNCIL (${AI_COUNCIL.length} Models):`);
+  console.log(`   🤖 AI COUNCIL (${AI_COUNCIL.length} Specialized Agents):`);
   AI_COUNCIL.forEach(ai => {
-    console.log(`      • ${ai.name} - ${ai.specialty}`);
+    console.log(`      • ${ai.name} - ${ai.specialty} (${ai.perspective})`);
   });
   console.log(``);
-  console.log(`   📡 Data Sources:`);
-  console.log(`      • Crypto.com Exchange API (Primary)`);
-  console.log(`      • CoinGecko API (Fallback)`);
-  console.log(``);
   console.log(`   ⚡ Innovation:`);
-  console.log(`      ✓ Multi-AI Consensus Voting`);
-  console.log(`      ✓ Confidence-Weighted Analysis`);
-  console.log(`      ✓ Individual Model Transparency`);
+  console.log(`      ✓ Multi-Round Deliberative Consensus (2 rounds)`);
+  console.log(`      ✓ Peer Review & Cross-Examination`);
+  console.log(`      ✓ Confidence Evolution Tracking`);
+  console.log(`      ✓ Signal Refinement Through Debate`);
   console.log(`      ✓ HTTP 402 Payment Protocol`);
   console.log(`${"=".repeat(70)}\n`);
 });
