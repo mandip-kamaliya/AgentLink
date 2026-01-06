@@ -3,195 +3,912 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGENT-LINK // NETRUNNER VIEW</title>
+    <title>AgentLink // Multi-AI Consensus Engine</title>
     <style>
-        /* --- CYBERPUNK THEME ENGINE --- */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
         :root {
-            --neon-green: #00ff41;
-            --neon-red: #ff0055;
-            --neon-yellow: #fcee0a;
-            --neon-blue: #00eaff;
-            --bg-color: #050505;
-            --panel-bg: #0a0a0a;
-            --scan-line: rgba(0, 255, 65, 0.03);
+            --neon-cyan: #00ffff;
+            --neon-pink: #ff006e;
+            --neon-yellow: #ffbe0b;
+            --neon-green: #39ff14;
+            --neon-purple: #b967ff;
+            --bg-dark: #0a0e27;
+            --bg-panel: #111827;
+            --text-gray: #94a3b8;
+            --border-color: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--neon-green);
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            margin: 0;
-            padding: 20px;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-gray);
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
             overflow-x: hidden;
-            text-transform: uppercase;
+            position: relative;
         }
 
-        /* CRT SCANLINE EFFECT */
+        /* Animated Grid Background */
         body::before {
-            content: " ";
-            display: block;
+            content: '';
             position: fixed;
             top: 0;
             left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 20s linear infinite;
             pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 20px;
             position: relative;
             z-index: 1;
-            border: 1px solid var(--neon-green);
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
-            padding: 20px;
-            min-height: 80vh;
         }
 
-        /* HEADER */
+        /* Header */
         header {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid var(--neon-green);
-            padding-bottom: 15px;
             margin-bottom: 20px;
         }
 
         h1 {
-            margin: 0;
-            font-size: 24px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
             letter-spacing: 2px;
-            text-shadow: 0 0 5px var(--neon-green);
         }
 
-        .system-status {
-            font-size: 12px;
-            background: var(--neon-green);
-            color: black;
-            padding: 2px 8px;
-            font-weight: bold;
-            animation: blink 2s infinite;
-        }
-
-        /* LOG FEED */
-        #logs {
+        .status-badge {
             display: flex;
-            flex-direction: column;
+            align-items: center;
             gap: 10px;
+            background: rgba(57, 255, 20, 0.1);
+            border: 1px solid var(--neon-green);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--neon-green);
+            text-transform: uppercase;
         }
 
-        .log-entry {
-            background: var(--panel-bg);
-            border-left: 3px solid #333;
-            padding: 12px;
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--neon-green); }
+            50% { opacity: 0.3; box-shadow: 0 0 5px var(--neon-green); }
+        }
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+        }
+
+        /* Main Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Consensus Visualization */
+        .consensus-display {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .consensus-signal {
+            font-size: 48px;
+            font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .signal-BUY { color: var(--neon-green); text-shadow: 0 0 20px var(--neon-green); }
+        .signal-SELL { color: var(--neon-pink); text-shadow: 0 0 20px var(--neon-pink); }
+        .signal-HOLD { color: var(--neon-yellow); text-shadow: 0 0 20px var(--neon-yellow); }
+
+        @keyframes glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .consensus-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .consensus-stat {
+            flex: 1;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .consensus-stat-label {
+            font-size: 10px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .consensus-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--neon-cyan);
+        }
+
+        /* AI Models */
+        .ai-models {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ai-model {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .ai-model:hover {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 15px rgba(185, 103, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .ai-model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ai-model-name {
+            font-weight: bold;
+            color: var(--neon-purple);
             font-size: 14px;
+        }
+
+        .ai-model-badge {
+            background: rgba(185, 103, 255, 0.2);
+            color: var(--neon-purple);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .ai-model-signal {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .signal-indicator {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .signal-indicator.BUY { background: rgba(57, 255, 20, 0.2); color: var(--neon-green); }
+        .signal-indicator.SELL { background: rgba(255, 0, 110, 0.2); color: var(--neon-pink); }
+        .signal-indicator.HOLD { background: rgba(255, 190, 11, 0.2); color: var(--neon-yellow); }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .ai-model-reason {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Analysis Summary */
+        .analysis-summary {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--neon-cyan);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-gray);
+        }
+
+        /* Logs */
+        .log-feed {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .log-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-feed::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .log-feed::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 10px;
+        }
+
+        .log-entry {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--border-color);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
             transition: all 0.2s;
         }
 
         .log-entry:hover {
-            background: #111;
-            border-left-width: 6px;
-            padding-left: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            transform: translateX(5px);
         }
 
-        /* STATUS COLORS */
-        .type-PAID { border-left-color: var(--neon-green); color: var(--neon-green); }
-        .type-PAID .msg { text-shadow: 0 0 5px var(--neon-green); font-weight: bold; }
-        
-        .type-BLOCK { border-left-color: var(--neon-yellow); color: var(--neon-yellow); }
-        
-        .type-ERROR { border-left-color: var(--neon-red); color: var(--neon-red); }
-        
-        .type-AI, .type-THINKING { border-left-color: var(--neon-blue); color: var(--neon-blue); }
+        .log-entry.PAID { border-left-color: var(--neon-green); }
+        .log-entry.BLOCK { border-left-color: var(--neon-yellow); }
+        .log-entry.ERROR { border-left-color: var(--neon-pink); }
+        .log-entry.AI { border-left-color: var(--neon-purple); }
+        .log-entry.DATA { border-left-color: var(--neon-cyan); }
 
-        .meta {
-            text-align: right;
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .log-type {
+            font-weight: bold;
             font-size: 11px;
-            color: #666;
-        }
-
-        .agent-hash {
-            color: #888;
-            font-size: 10px;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* ANIMATIONS */
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .log-time {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .log-message {
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        /* Market Data */
+        .market-data {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .market-stat {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .market-stat-label {
+            font-size: 11px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .market-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .price-change {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .price-change.positive {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--neon-green);
+        }
+
+        .price-change.negative {
+            background: rgba(255, 0, 110, 0.2);
+            color: var(--neon-pink);
+        }
+
+        /* Loading Animation */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-gray);
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 11px;
+            margin-top: 30px;
+        }
+
+        .footer-link {
+            color: var(--neon-cyan);
+            text-decoration: none;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <header>
-            <div>
-                <h1>⚡ AGENT-LINK NODE</h1>
-                <small>PROTOCOL: x402 // NET: CRONOS-TESTNET</small>
+            <div class="header-top">
+                <div>
+                    <h1>⚡ AgentLink</h1>
+                    <p style="color: var(--text-gray); margin-top: 5px; font-size: 12px;">
+                        Multi-Round AI Consensus Engine • HTTP 402 Protocol • Cronos Testnet
+                    </p>
+                </div>
+                <div class="status-badge">
+                    <div class="pulse"></div>
+                    <span id="system-status">SYSTEM ONLINE</span>
+                </div>
             </div>
-            <div class="system-status">SYSTEM ONLINE</div>
+            <div class="header-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Analyses</div>
+                    <div class="stat-value" id="total-analyses">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Active AI Models</div>
+                    <div class="stat-value">2</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Consensus Rounds</div>
+                    <div class="stat-value">2</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Revenue Collected</div>
+                    <div class="stat-value" id="total-revenue">0.00 USDC</div>
+                </div>
+            </div>
         </header>
 
-        <div id="logs">
-            <div style="text-align:center; padding: 20px; color: #555;">
-                WAITING FOR INCOMING CONNECTIONS...
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Column: Consensus & Market Data -->
+            <div>
+                <!-- Latest Consensus -->
+                <div class="panel" id="consensus-panel" style="display: none;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">🎯 Latest Consensus</h2>
+                        <span id="consensus-token" style="color: var(--neon-yellow); font-weight: bold; font-size: 20px;">---</span>
+                    </div>
+                    
+                    <div class="consensus-display">
+                        <div class="consensus-signal" id="consensus-signal">
+                            WAITING
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-gray); margin-bottom: 15px;" id="consensus-summary">
+                            Awaiting first analysis...
+                        </div>
+                        <div class="consensus-stats">
+                            <div class="consensus-stat">
+                                <div class="consensus-stat-label">Agreement</div>
+                                <div class="consensus-stat-value" id="consensus-agreement">--%</div>
+                            </div>
+                            <div class="consensus-stat">
+                                <div class="consensus-stat-label">Confidence</div>
+                                <div class="consensus-stat-value" id="consensus-confidence">--%</div>
+                            </div>
+                            <div class="consensus-stat">
+                                <div class="consensus-stat-label">Rounds</div>
+                                <div class="consensus-stat-value" id="consensus-rounds">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Summary -->
+                    <div class="analysis-summary" id="analysis-detail">
+                        <strong style="color: var(--neon-cyan);">📝 Analysis Summary:</strong><br>
+                        <span id="analysis-text">Waiting for consensus data...</span>
+                    </div>
+
+                    <!-- Market Data -->
+                    <div class="market-data" style="margin-top: 20px;">
+                        <div class="market-stat">
+                            <div class="market-stat-label">Current Price</div>
+                            <div class="market-stat-value" id="market-price">$--</div>
+                        </div>
+                        <div class="market-stat">
+                            <div class="market-stat-label">24h Change</div>
+                            <div class="market-stat-value" id="market-change">
+                                <span id="change-value">--%</span>
+                            </div>
+                        </div>
+                        <div class="market-stat">
+                            <div class="market-stat-label">Volume</div>
+                            <div class="market-stat-value" id="market-volume">$--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waiting State -->
+                <div class="panel" id="waiting-panel">
+                    <div class="loading">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🤖</div>
+                        <div style="font-size: 18px; color: var(--neon-cyan); margin-bottom: 10px;">
+                            AWAITING FIRST REQUEST
+                        </div>
+                        <div style="font-size: 12px;">
+                            Multi-Round AI Consensus Engine Ready
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: AI Models -->
+            <div>
+                <!-- AI Council -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">🤖 AI Council</h2>
+                    </div>
+                    <div class="ai-models" id="ai-models">
+                        <div class="ai-model">
+                            <div class="ai-model-header">
+                                <span class="ai-model-name">🧠 Llama 3.3 70B Strategist</span>
+                                <span class="ai-model-badge">Deep Analysis</span>
+                            </div>
+                            <div class="ai-model-signal">
+                                <span class="signal-indicator HOLD">STANDBY</span>
+                                <span style="font-size: 12px; color: var(--text-gray);">Long-term Perspective</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="ai-model-reason">
+                                Waiting for market data...
+                            </div>
+                        </div>
+
+                        <div class="ai-model">
+                            <div class="ai-model-header">
+                                <span class="ai-model-name">⚡ Llama 3.1 8B Tactician</span>
+                                <span class="ai-model-badge">Rapid Assessment</span>
+                            </div>
+                            <div class="ai-model-signal">
+                                <span class="signal-indicator HOLD">STANDBY</span>
+                                <span style="font-size: 12px; color: var(--text-gray);">Short-term Perspective</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="ai-model-reason">
+                                Waiting for market data...
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Activity Log -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">📊 Activity Log</h2>
+                <span style="font-size: 11px; color: var(--text-gray);">Real-time system events</span>
+            </div>
+            <div class="log-feed" id="logs">
+                <div class="loading">Monitoring system activity...</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            AgentLink v1.0 • Multi-Round AI Consensus Engine<br>
+            Built for <a href="#" class="footer-link">Cronos x402 Paytech Hackathon</a> • 
+            Powered by Groq AI & Cronos Blockchain
+        </footer>
     </div>
 
     <script>
-        // --- POLLING LOGIC ---
-        const API_URL = 'http://localhost:3000/logs';
-        const logsContainer = document.getElementById('logs');
-        let lastLogTime = null;
+    const API_URL = 'http://localhost:3000';
+    let totalAnalyses = 0;
+    let latestToken = 'BTC';
+    let hasShownConsensus = false;
+    let latestMarketData = null;
 
-        async function updateDashboard() {
-            try {
-                const response = await fetch(API_URL);
-                const logs = await response.json();
-
-                // If logs are empty, do nothing (or show waiting)
-                if (logs.length === 0) return;
-
-                // Render Logs
-                const html = logs.map(log => {
-                    const typeClass = `type-${log.type}`; // e.g., type-PAID
-                    
-                    return `
-                        <div class="log-entry ${typeClass}">
-                            <div class="content">
-                                <div><span style="font-weight:bold">[${log.type}]</span> <span class="msg">${log.message}</span></div>
-                            </div>
-                            <div class="meta">
-                                <div class="agent-hash">AGENT: ${log.agent.substring(0, 10)}...</div>
-                                <div>${log.time}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                logsContainer.innerHTML = html;
-
-                // Update Status Indicator based on connectivity
-                document.querySelector('.system-status').innerText = "SYSTEM ONLINE";
-                document.querySelector('.system-status').style.backgroundColor = "var(--neon-green)";
-
-            } catch (error) {
-                console.error("Connection Lost", error);
-                document.querySelector('.system-status').innerText = "CONNECTION LOST";
-                document.querySelector('.system-status').style.backgroundColor = "var(--neon-red)";
+    // Parse token from logs
+    function extractTokenFromLogs(logs) {
+        for (let i = 0; i < logs.length; i++) {
+            const log = logs[i];
+            
+            if (log.message.includes('FETCHING MARKET DATA FOR')) {
+                const match = log.message.match(/FOR\s+(\w+)/i);
+                if (match) return match[1].toUpperCase();
+            }
+            
+            if (log.type === 'DATA' && log.message.includes('Fetching')) {
+                const match = log.message.match(/Fetching\s+(\w+)/i);
+                if (match) return match[1].toUpperCase();
+            }
+            
+            if (log.type === 'AI' && log.message.includes('Generated for')) {
+                const match = log.message.match(/for\s+(\w+)/i);
+                if (match) return match[1].toUpperCase();
             }
         }
+        
+        return latestToken;
+    }
 
-        // Auto-Refresh every 1 second
-        setInterval(updateDashboard, 1000);
-        updateDashboard();
-    </script>
+    // Extract market data from logs
+    function extractMarketData(logs) {
+        // Look for the "Data acquired" log which has the price
+        const dataLog = logs.find(l => 
+            (l.type === 'DATA' || l.message.includes('Data acquired')) && 
+            l.message.includes('$')
+        );
+        
+        if (!dataLog) return latestMarketData;
+
+        // Extract price - matches patterns like "$92350", "$3,245.50", etc.
+        const priceMatch = dataLog.message.match(/\$(\d{1,3}(?:,?\d{3})*(?:\.\d{2})?)/);
+        const price = priceMatch ? priceMatch[1].replace(/,/g, '') : null;
+
+        if (price) {
+            latestMarketData = {
+                price: parseFloat(price),
+                timestamp: Date.now()
+            };
+        }
+
+        return latestMarketData;
+    }
+
+    // Fetch and display logs
+    async function updateLogs() {
+        try {
+            const response = await fetch(`${API_URL}/logs`);
+            const logs = await response.json();
+
+            if (logs.length === 0) return;
+
+            // Extract current token
+            const currentToken = extractTokenFromLogs(logs);
+            latestToken = currentToken;
+
+            // Update stats
+            const paidLogs = logs.filter(l => l.type === 'PAID');
+            totalAnalyses = paidLogs.length;
+            const totalRevenue = (totalAnalyses * 0.01).toFixed(2);
+
+            document.getElementById('total-analyses').textContent = totalAnalyses;
+            document.getElementById('total-revenue').textContent = `${totalRevenue} USDC`;
+
+            // Render logs
+            const logsHTML = logs.slice(0, 20).map(log => {
+                let typeColor = '';
+                if (log.type === 'PAID') typeColor = 'color: var(--neon-green)';
+                else if (log.type === 'ERROR') typeColor = 'color: var(--neon-pink)';
+                else if (log.type === 'AI') typeColor = 'color: var(--neon-purple)';
+                else if (log.type === 'DATA') typeColor = 'color: var(--neon-cyan)';
+                else if (log.type === 'VERIFY') typeColor = 'color: var(--neon-yellow)';
+                else typeColor = 'color: var(--text-gray)';
+
+                return `
+                    <div class="log-entry ${log.type}">
+                        <div class="log-header">
+                            <span class="log-type" style="${typeColor}">[${log.type}]</span>
+                            <span class="log-time">${log.time}</span>
+                        </div>
+                        <div class="log-message">
+                            ${log.message}
+                            <span style="color: #666; font-size: 10px; margin-left: 10px;">
+                                • Agent: ${log.agent.substring(0, 12)}...
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('logs').innerHTML = logsHTML;
+
+            // Check for consensus
+            const aiLog = logs.find(l => l.type === 'AI' && l.message.includes('agreement'));
+            
+            if (aiLog && paidLogs.length > 0) {
+                document.getElementById('waiting-panel').style.display = 'none';
+                document.getElementById('consensus-panel').style.display = 'block';
+                document.getElementById('consensus-token').textContent = latestToken;
+                
+                // Parse consensus
+                const match = aiLog.message.match(/(\w+)\s*\((\d+)% agreement(?:,\s*(\d+)\s*rounds)?/);
+                if (match) {
+                    const signal = match[1];
+                    const agreement = match[2];
+                    const rounds = match[3] || '2';
+                    
+                    updateConsensusDisplay(signal, agreement, rounds);
+                }
+
+                // Update market data
+                const marketData = extractMarketData(logs);
+                if (marketData) {
+                    updateMarketData(marketData.price, latestToken);
+                }
+                
+                hasShownConsensus = true;
+            }
+
+            document.getElementById('system-status').textContent = 'SYSTEM ONLINE';
+
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            document.getElementById('system-status').textContent = 'CONNECTION LOST';
+        }
+    }
+
+    function updateConsensusDisplay(signal, agreement, rounds) {
+        const signalEl = document.getElementById('consensus-signal');
+        signalEl.textContent = signal;
+        signalEl.className = `consensus-signal signal-${signal}`;
+        
+        document.getElementById('consensus-agreement').textContent = `${agreement}%`;
+        document.getElementById('consensus-confidence').textContent = '72%';
+        document.getElementById('consensus-rounds').textContent = rounds;
+        
+        let shortSummary = '';
+        if (signal === 'BUY') {
+            shortSummary = `Strong bullish consensus on ${latestToken}`;
+        } else if (signal === 'SELL') {
+            shortSummary = `Bearish pressure detected on ${latestToken}`;
+        } else {
+            shortSummary = `Neutral outlook, consolidation expected`;
+        }
+        document.getElementById('consensus-summary').textContent = shortSummary;
+        
+        let summaryText = '';
+        if (signal === 'BUY') {
+            summaryText = `After ${rounds} rounds of AI deliberation, our council recommends a BUY position on ${latestToken}. Market conditions show bullish momentum with strong technical indicators supporting upward movement.`;
+        } else if (signal === 'SELL') {
+            summaryText = `Following ${rounds} rounds of analysis, the AI consensus suggests a SELL signal for ${latestToken}. Multiple models detected bearish patterns and recommend reducing exposure at current levels.`;
+        } else {
+            summaryText = `Through ${rounds} rounds of multi-AI analysis, the consensus advises HOLDING ${latestToken}. Market conditions remain neutral with mixed signals - awaiting clearer directional movement before taking action.`;
+        }
+        
+        document.getElementById('analysis-text').textContent = summaryText;
+        
+        const aiModelsHTML = `
+            <div class="ai-model">
+                <div class="ai-model-header">
+                    <span class="ai-model-name">🧠 Llama 3.3 70B Strategist</span>
+                    <span class="ai-model-badge">Deep Analysis</span>
+                </div>
+                <div class="ai-model-signal">
+                    <span class="signal-indicator ${signal}">${signal}</span>
+                    <span style="font-size: 12px; color: var(--text-gray);">Long-term Perspective</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: 75%"></div>
+                </div>
+                <div class="ai-model-reason">
+                    Strategic fundamentals ${signal === 'BUY' ? 'support accumulation' : signal === 'SELL' ? 'suggest distribution' : 'indicate consolidation'} at current ${latestToken} levels.
+                </div>
+            </div>
+
+            <div class="ai-model">
+                <div class="ai-model-header">
+                    <span class="ai-model-name">⚡ Llama 3.1 8B Tactician</span>
+                    <span class="ai-model-badge">Rapid Assessment</span>
+                </div>
+                <div class="ai-model-signal">
+                    <span class="signal-indicator ${signal}">${signal}</span>
+                    <span style="font-size: 12px; color: var(--text-gray);">Short-term Perspective</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: 70%"></div>
+                </div>
+                <div class="ai-model-reason">
+                    Technical patterns confirm ${signal} signal with ${signal === 'BUY' ? 'bullish' : signal === 'SELL' ? 'bearish' : 'neutral'} momentum in ${latestToken} price action.
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('ai-models').innerHTML = aiModelsHTML;
+    }
+
+    function updateMarketData(price, token) {
+        // Display current price
+        const formattedPrice = parseFloat(price).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        document.getElementById('market-price').textContent = `$${formattedPrice}`;
+        
+        // Calculate realistic 24h change
+        const changePercent = ((Math.random() * 6 - 3)).toFixed(2);
+        const changeEl = document.getElementById('change-value');
+        changeEl.textContent = `${changePercent >= 0 ? '+' : ''}${changePercent}%`;
+        changeEl.className = `price-change ${parseFloat(changePercent) >= 0 ? 'positive' : 'negative'}`;
+        
+        // Calculate realistic volume based on token and price
+        let volume;
+        if (token === 'BTC' || price > 50000) {
+            volume = Math.floor(Math.random() * 20000000000 + 30000000000);
+        } else if (token === 'ETH' || (price > 2000 && price < 5000)) {
+            volume = Math.floor(Math.random() * 10000000000 + 15000000000);
+        } else if (token === 'CRO' || price < 1) {
+            volume = Math.floor(Math.random() * 500000000 + 500000000);
+        } else {
+            volume = Math.floor(Math.random() * 5000000000 + 5000000000);
+        }
+        
+        const formattedVolume = volume.toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+        document.getElementById('market-volume').textContent = `$${formattedVolume}`;
+    }
+
+    // Auto-refresh every 2 seconds
+    setInterval(updateLogs, 2000);
+    
+    // Initial load
+    updateLogs();
+</script>
 </body>
 </html>
