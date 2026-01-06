@@ -21,7 +21,7 @@ async function runAgent() {
   console.log(`${"=".repeat(70)}`);
   console.log(`   Wallet: ${signer.address.slice(0,10)}...${signer.address.slice(-8)}`);
   console.log(`   Target: ${TARGET_TOKEN}`);
-  console.log(`   Service: Multi-AI Consensus Analysis`);
+  console.log(`   Service: Multi-Round AI Consensus`);
   console.log(`${"=".repeat(70)}`);
   await sleep(800);
 
@@ -48,7 +48,7 @@ async function runAgent() {
 
         const requirements = facilitator.generatePaymentRequirements({
           payTo: invoice.pay_to,
-          description: `Multi-AI Consensus: ${TARGET_TOKEN}`,
+          description: `Multi-Round Consensus: ${TARGET_TOKEN}`,
           maxAmountRequired: invoice.amount.toString(),
           token: invoice.token
         });
@@ -69,7 +69,7 @@ async function runAgent() {
         const data = retryResponse.data;
         
         console.log(`\n${"=".repeat(70)}`);
-        console.log(`🎉 MULTI-AI CONSENSUS ACQUIRED`);
+        console.log(`🎉 MULTI-ROUND CONSENSUS ACQUIRED`);
         console.log(`${"=".repeat(70)}`);
         
         console.log(`\n📊 MARKET DATA (${data.source}):`);
@@ -78,19 +78,27 @@ async function runAgent() {
         console.log(`   24h Change: ${data.market_stats.change}%`);
         console.log(`   Volume: $${data.market_stats.volume?.toLocaleString() || 'N/A'}`);
         
-        console.log(`\n🤖 AI CONSENSUS:`);
+        console.log(`\n🤖 FINAL CONSENSUS:`);
         console.log(`   Signal: ${data.ai_consensus.signal}`);
         console.log(`   Agreement: ${data.ai_consensus.agreement}`);
         console.log(`   Confidence: ${data.ai_consensus.confidence}`);
+        console.log(`   Rounds: ${data.ai_consensus.rounds}`);
+        console.log(`   Evolution: ${data.ai_consensus.evolution}`);
         console.log(`   Votes: BUY=${data.ai_consensus.votes.BUY}, SELL=${data.ai_consensus.votes.SELL}, HOLD=${data.ai_consensus.votes.HOLD}`);
         
-        console.log(`\n💡 INDIVIDUAL AI MODELS:`);
-        data.individual_analyses.forEach((analysis, i) => {
-          const emoji = analysis.error ? "❌" : "✓";
-          console.log(`   ${emoji} ${analysis.model} (${analysis.specialty}):`);
-          console.log(`      Signal: ${analysis.signal} | Confidence: ${analysis.confidence}%`);
-          console.log(`      Reason: ${analysis.reason}`);
-        });
+        if (data.analyses_by_round) {
+          console.log(`\n💡 ROUND 1 - Independent Analysis:`);
+          data.analyses_by_round.round_1.forEach(a => {
+            console.log(`   • ${a.model} (${a.perspective}):`);
+            console.log(`     ${a.signal} (${a.confidence}%) - ${a.reason}`);
+          });
+          
+          console.log(`\n💡 ROUND 2 - Peer Review & Refinement:`);
+          data.analyses_by_round.round_2.forEach(a => {
+            console.log(`   • ${a.model} (${a.perspective}):`);
+            console.log(`     ${a.signal} (${a.confidence}%) - ${a.reason}`);
+          });
+        }
         
         console.log(`\n📝 SUMMARY:`);
         console.log(`   ${data.ai_consensus.summary}`);
