@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = 3000;
-const SELLER_WALLET = process.env.SELLER_WALLET.toLowerCase(); // Lowercase for comparison
+const SELLER_WALLET = process.env.SELLER_WALLET.toLowerCase();
 const PROVIDER_URL = "https://evm-t3.cronos.org";
 const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
 const DEV_USDC_ADDRESS = "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0";
@@ -37,11 +37,9 @@ function logEvent(type, agent, message) {
   console.log(`[${time}] ${type}: ${message}`);
 }
 
-// UPDATED: Verify Direct ERC-20 Transfer with better debugging
-async function verifyDirectTransfer(txHash, userAddress) {
-  console.log(`🔎 LOOKING FOR RECEIPT: ${txHash}`);
-  console.log(`   User Address: ${userAddress}`);
-  console.log(`   Seller Address: ${SELLER_WALLET}`);
+// METHOD 1: Verify Facilitator Payment (for CLI agent.js)
+async function verifyFacilitatorPayment(txHash) {
+  console.log(`🔎 VERIFYING FACILITATOR PAYMENT: ${txHash}`);
   
   for (let i = 0; i < 5; i++) {
     try {
@@ -53,50 +51,75 @@ async function verifyDirectTransfer(txHash, userAddress) {
         continue;
       }
 
-      console.log(`   ✅ RECEIPT FOUND with ${receipt.logs.length} logs`);
+      console.log(`   ✅ RECEIPT FOUND`);
       
-      // Verify transaction was successful
       if (receipt.status !== 1) {
-        console.log(`   ❌ Transaction failed (status: ${receipt.status})`);
+        console.log(`   ❌ Transaction failed`);
         return false;
       }
 
-      // ERC-20 Transfer event signature
       const transferTopic = ethers.id("Transfer(address,address,uint256)");
-      
-      console.log(`   🔍 Searching for Transfer events...`);
-      
-      // Log all events for debugging
-      receipt.logs.forEach((log, index) => {
-        console.log(`   Log ${index}:`);
-        console.log(`      Address: ${log.address}`);
-        console.log(`      Topic[0]: ${log.topics[0]}`);
-        if (log.topics.length > 1) console.log(`      Topic[1] (from): ${log.topics[1]}`);
-        if (log.topics.length > 2) console.log(`      Topic[2] (to): ${log.topics[2]}`);
+      const sellerTopic = ethers.zeroPadValue(SELLER_WALLET, 32);
+
+      const paymentLog = receipt.logs.find(log => {
+        return log.address.toLowerCase() === DEV_USDC_ADDRESS.toLowerCase() &&
+               log.topics[0] === transferTopic &&
+               log.topics[2].toLowerCase() === sellerTopic.toLowerCase();
       });
 
-      // Find the Transfer event from the USDC contract
+      if (paymentLog) {
+        const amount = BigInt(paymentLog.data).toString();
+        if (BigInt(amount) >= BigInt(PRICE_UNITS)) {
+          console.log(`   💰 CONFIRMED: ${ethers.formatUnits(amount, 6)} USDC (Facilitator)`);
+          return true;
+        }
+      }
+      return false;
+
+    } catch (e) {
+      console.error("   ❌ RPC Error:", e.message);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+  return false;
+}
+
+// METHOD 2: Verify Direct Transfer (for Web dashboard)
+async function verifyDirectTransfer(txHash, userAddress) {
+  console.log(`🔎 VERIFYING DIRECT TRANSFER: ${txHash}`);
+  console.log(`   From: ${userAddress}`);
+  console.log(`   To: ${SELLER_WALLET}`);
+  
+  for (let i = 0; i < 5; i++) {
+    try {
+      const receipt = await provider.getTransactionReceipt(txHash);
+      
+      if (!receipt) {
+        console.log(`   ...attempt ${i+1}/5`);
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+
+      console.log(`   ✅ RECEIPT FOUND`);
+      
+      if (receipt.status !== 1) {
+        console.log(`   ❌ Transaction failed`);
+        return false;
+      }
+
+      const transferTopic = ethers.id("Transfer(address,address,uint256)");
+
       const transferLog = receipt.logs.find(log => {
         const isUSDC = log.address.toLowerCase() === DEV_USDC_ADDRESS.toLowerCase();
         const isTransfer = log.topics[0] === transferTopic;
         const hasTopics = log.topics.length === 3;
         
         if (isUSDC && isTransfer && hasTopics) {
-          // Extract addresses from topics (they are padded to 32 bytes)
-          const fromAddress = '0x' + log.topics[1].slice(26); // Remove padding
-          const toAddress = '0x' + log.topics[2].slice(26);   // Remove padding
-          
-          console.log(`   📋 Found Transfer event:`);
-          console.log(`      From: ${fromAddress}`);
-          console.log(`      To: ${toAddress}`);
-          console.log(`      Expected From: ${userAddress.toLowerCase()}`);
-          console.log(`      Expected To: ${SELLER_WALLET.toLowerCase()}`);
+          const fromAddress = '0x' + log.topics[1].slice(26);
+          const toAddress = '0x' + log.topics[2].slice(26);
           
           const fromMatches = fromAddress.toLowerCase() === userAddress.toLowerCase();
           const toMatches = toAddress.toLowerCase() === SELLER_WALLET.toLowerCase();
-          
-          console.log(`      From matches: ${fromMatches}`);
-          console.log(`      To matches: ${toMatches}`);
           
           return fromMatches && toMatches;
         }
@@ -106,24 +129,13 @@ async function verifyDirectTransfer(txHash, userAddress) {
 
       if (transferLog) {
         const amount = BigInt(transferLog.data).toString();
-        const amountFormatted = ethers.formatUnits(amount, 6);
-        console.log(`   💰 Amount: ${amountFormatted} USDC (${amount} units)`);
-        console.log(`   📊 Required: ${ethers.formatUnits(PRICE_UNITS, 6)} USDC (${PRICE_UNITS} units)`);
-        
         if (BigInt(amount) >= BigInt(PRICE_UNITS)) {
-          console.log(`   ✅ CONFIRMED: Payment verified`);
+          console.log(`   💰 CONFIRMED: ${ethers.formatUnits(amount, 6)} USDC (Direct)`);
           return true;
-        } else {
-          console.log(`   ❌ Amount too low: ${amount} < ${PRICE_UNITS}`);
-          return false;
         }
       }
       
       console.log(`   ❌ No matching Transfer event found`);
-      console.log(`   💡 This might mean:`);
-      console.log(`      - Wrong token was transferred`);
-      console.log(`      - Transfer wasn't to the seller address`);
-      console.log(`      - Transaction was to a different contract`);
       return false;
 
     } catch (e) {
@@ -131,11 +143,10 @@ async function verifyDirectTransfer(txHash, userAddress) {
       await new Promise(r => setTimeout(r, 2000));
     }
   }
-  
-  console.log(`   ❌ TIMEOUT: Could not verify payment after 5 attempts`);
   return false;
 }
-// UPDATED: x402 Middleware for Direct Transfers
+
+// DUAL-MODE x402 Middleware
 const x402Protocol = async (req, res, next) => {
   const txHash = req.headers['x-payment-hash'] || req.headers['payment-hash'];
   const userAddress = req.headers['x-user-address'] || req.headers['user-address'];
@@ -158,19 +169,24 @@ const x402Protocol = async (req, res, next) => {
     });
   }
 
-  if (!userAddress) {
-    logEvent("ERROR", "System", "Missing user address");
-    return res.status(400).json({ error: "User address required" });
+  // Detect payment method
+  let isValid = false;
+  
+  if (userAddress) {
+    // Direct transfer from web dashboard
+    logEvent("VERIFY", "Web", `Checking ${txHash.slice(0, 10)}... from ${userAddress.slice(0, 10)}...`);
+    isValid = await verifyDirectTransfer(txHash, userAddress);
+  } else {
+    // Facilitator payment from CLI agent
+    logEvent("VERIFY", "CLI", `Checking ${txHash.slice(0, 10)}...`);
+    isValid = await verifyFacilitatorPayment(txHash);
   }
-
-  logEvent("VERIFY", "System", `Checking ${txHash.slice(0, 10)}... from ${userAddress.slice(0, 10)}...`);
-  const isValid = await verifyDirectTransfer(txHash, userAddress);
 
   if (isValid) {
     logEvent("PAID", "Agent", "✅ Verified");
     next();
   } else {
-    logEvent("ERROR", "Fraud", "Payment verification failed");
+    logEvent("ERROR", "System", "Payment verification failed");
     res.status(403).json({ error: "Invalid Payment" });
   }
 };
@@ -480,7 +496,7 @@ app.get('/logs', (req, res) => res.json(logs));
 
 app.listen(PORT, () => {
   console.log(`\n${"=".repeat(70)}`);
-  console.log(`🟢 AGENTLINK PRO - MULTI-ROUND CONSENSUS ENGINE`);
+  console.log(`🟢 AGENTLINK PRO - DUAL-MODE CONSENSUS ENGINE`);
   console.log(`${"=".repeat(70)}`);
   console.log(`   🌐 Port: ${PORT}`);
   console.log(`   💰 Price: 0.01 USDC per multi-round analysis`);
@@ -491,11 +507,14 @@ app.listen(PORT, () => {
     console.log(`      • ${ai.name} - ${ai.specialty} (${ai.perspective})`);
   });
   console.log(``);
-  console.log(`   ⚡ Innovation:`);
+  console.log(`   ⚡ Supported Payment Methods:`);
+  console.log(`      ✓ CLI: x402 Protocol with Facilitator SDK`);
+  console.log(`      ✓ Web: Direct ERC-20 Transfer via MetaMask`);
+  console.log(``);
+  console.log(`   🚀 Innovation:`);
   console.log(`      ✓ Multi-Round Deliberative Consensus (2 rounds)`);
   console.log(`      ✓ Peer Review & Cross-Examination`);
   console.log(`      ✓ Confidence Evolution Tracking`);
-  console.log(`      ✓ Direct ERC-20 Transfer Support`);
   console.log(`      ✓ HTTP 402 Payment Protocol`);
   console.log(`${"=".repeat(70)}\n`);
 });
