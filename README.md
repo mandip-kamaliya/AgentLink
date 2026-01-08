@@ -756,10 +756,9 @@ Special thanks to:
 
 ### Developers
 
-- **GitHub:** [@yourusername](https://github.com/yourusername)
-- **Twitter:** [@yourhandle](https://twitter.com/yourhandle)
-- **Email:** your.email@example.com
-- **Discord:** YourDiscord#1234
+- **GitHub:** [@mandip](https://github.com/mandip-kamaliya)
+- **Twitter:** [@mandip_twtt](https://x.com/mandip_twtt)
+- **Email:** mandipkamaliya7@gmail.com
 
 ### Support
 
