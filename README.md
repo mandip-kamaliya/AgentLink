@@ -9,9 +9,6 @@
 
 **Revolutionary Multi-Round AI Consensus Engine with Autonomous Machine-to-Machine Payments**
 
-Built for **Cronos x402 Paytech Hackathon - Track 3**
-
-[Live Demo](#-demo) • [Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture)
 
 </div>
 
@@ -543,20 +540,8 @@ Get real-time system activity logs.
 
 4. **Deploy!** Your API will be at: `https://agentlink-server.onrender.com`
 
-### Frontend Deployment (Netlify)
 
-1. **Update API URL in `dashboard.html`:**
-```javascript
-   const API_URL = 'https://agentlink-server.onrender.com';
-```
-
-2. **Deploy:**
-   - Go to https://app.netlify.com/drop
-   - Rename `dashboard.html` to `index.html`
-   - Drag and drop the file
-   - Done! Get instant URL
-
-**Alternative:** Use Vercel for frontend hosting.
+**Frontend:** Use Vercel for frontend hosting.
 
 ---
 
@@ -625,33 +610,6 @@ The server implements basic rate limiting:
 
 ---
 
-## 🛣️ Roadmap
-
-### Phase 1: Core Features ✅
-- [x] Multi-round AI consensus
-- [x] Dual payment modes (CLI + Web)
-- [x] Cronos integration
-- [x] Real-time market data
-
-### Phase 2: Enhancements (Q1 2026)
-- [ ] Add more AI models (GPT-4, Claude, Gemini)
-- [ ] Historical consensus tracking
-- [ ] Model performance analytics
-- [ ] Advanced charting
-
-### Phase 3: Scale (Q2 2026)
-- [ ] Mainnet deployment
-- [ ] Support more blockchains (Ethereum, Polygon, BSC)
-- [ ] Subscription tiers
-- [ ] White-label API for enterprises
-
-### Phase 4: Governance (Q3 2026)
-- [ ] DAO for model selection
-- [ ] Community voting on features
-- [ ] Revenue sharing model
-- [ ] Mobile app (iOS/Android)
-
----
 
 ## 🤝 Contributing
 
@@ -713,21 +671,6 @@ SOFTWARE.
 
 ---
 
-## 🏆 Hackathon Submission
-
-### Track Information
-
-**Hackathon:** Cronos x402 Paytech Hackathon  
-**Track:** Track 3 - Crypto.com X Cronos Ecosystem Integrations with x402  
-**Team:** [Your Team Name]  
-**Submission Date:** January 2026
-
-### Links
-
-- 🌐 **Live Demo (Server):** https://your-server.onrender.com
-- 🎨 **Live Demo (Dashboard):** https://your-dashboard.netlify.app
-- 🎥 **Demo Video:** [YouTube Link]
-- 📊 **Presentation:** [Slides Link]
 
 ### Integration Checklist
 
