@@ -726,8 +726,6 @@ Found a bug? Have a feature request?
 
 ### 🌟 Star this repository if you find it useful! 🌟
 
-**Built with ❤️ for the Cronos x402 Paytech Hackathon**
-
 [⬆ Back to Top](#agentlink---multi-round-ai-consensus-engine)
 
 </div>
